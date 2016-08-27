@@ -15,8 +15,8 @@
       }
     </style>
     <div>
-      <paper-input label="username"></paper-input>
-      <paper-input label="password"></paper-input>
+      <paper-input id="username" label="username"></paper-input>
+      <paper-input id="password" label="password"></paper-input>
     </div>
     <div>
       <paper-button class='reply-cancel' on-tap="login">[login]</paper-button>
@@ -33,17 +33,16 @@
       MatrixBehavior
     ],
     properties: {
-      loggedIn: {
-        type: Boolean,
-        value: false,
-      }
     },
     attached() {
       MatrixBehavior.foo = 5
     },
 
     login() {
-      this.MatrixBehavior.login()
+      MatrixBehavior.login(this.$.username.value, this.$.password.value).then((success) => {
+        this.$.username.value = this.$.password.value = ''
+        this.close()
+      })
     },
 
     toggle: function(selector) {

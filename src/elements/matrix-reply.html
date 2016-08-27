@@ -3,6 +3,7 @@
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../../bower_components/paper-input/paper-textarea.html">
 <link rel="import" href="../../bower_components/iron-collapse/iron-collapse.html">
+<link rel="import" href="../../bower_components/iron-overlay-behavior/iron-overlay-behavior.html">
 <link rel="import" href="./matrix-behavior.html">
 <!--
 `matrix-comment`
@@ -15,27 +16,30 @@ Comment Element
   <template>
     <style>
       :host {
+        background: white;
+        color: black;
+        padding: 5em;
+        box-shadow: rgba(0, 0, 0, 0.24) -2px 5px 12px 0px, rgba(0, 0, 0, 0.12) 0px 0px 12px 0px;
         display: flex;
         flex-direction: column;
-        max-height: 20em;
+        min-height: 10em;
+        min-width: 30em;
+      }
+      paper-input {
+        --paper-input-container-disabled: {
+          opacity: 0.66;
+        };
       }
       #comment-content-posting {
         min-height: 4em;
       }
     </style>
     <div class='reply-body-wrapper'>
-      <template is="dom-if" if="[[!posting]]">
-        <paper-textarea id="replyBody" label="" value={{content}}></paper-textarea>
-      </template>
-      <template is="dom-if" if="[[posting]]">
-        <div id="comment-content-posting">
-            [[content]]
-        </div>
-      </template>
+      <paper-textarea id="replyBody" label="" value={{content}}></paper-textarea>
     </div>
     <div class='reply-row2-wrapper'>
       <template is="dom-if" if="[[!posting]]">
-        <paper-button class='reply-cancel' on-tap="cancel">[cancel]</paper-button>
+        <paper-button class='reply-cancel' on-tap="close">[cancel]</paper-button>
         <paper-button class='reply-post' on-tap="post">[post]</paper-button>
       </template>
       <template is="dom-if" is="[[posting]]">
@@ -50,16 +54,18 @@ Comment Element
 
       is: 'matrix-reply',
       behaviors: [
-        MatrixBehavior
+        MatrixBehavior,
+        Polymer.IronOverlayBehavior
       ],
       properties: {
         content: {
           type: String,
           value: '',
         },
-        parent: {
-          type: Object,
-          value: function() { return {} }
+        targetId: {
+          type: String,
+          value: '',
+          notify: true,
         },
         posting: {
           type: Boolean,
@@ -67,18 +73,24 @@ Comment Element
         },
       },
 
-      toggle: function(selector) {
-        this.commentBodyOpen = !this.commentBodyOpen
-      },
-
       post: function() {
-        this.sendCreateComment(this.parent.id, this.$.replyBody)
+        this.$.replyBody.disabled = true
         this.posting = true
+        const action = this.action === 'm.edit' ? this.sendEditComment.bind(this): this.sendCreateComment.bind(this)
+        action(this.targetId, this.content).then((succcess) => {
+          this.$.replyBody.disabled = false
+          this.posting = false
+          this.close()
+          }, (error) => {
+            this.$.replyBody.disabled = false
+            this.posting = false
+            console.log(error)
+        })
       },
 
-      cancel: function() {
+      close: function() {
         this.content = ''
-        this.fire('cancel')
+        Polymer.IronOverlayBehaviorImpl.close.apply(this)
       }
 
     });

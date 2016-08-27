@@ -7,20 +7,47 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="manifest" href="/manifest.json">
     <script src="/bower_components/webcomponentsjs/webcomponents-lite.js"></script>
-    <script src="node_modules/matrix-js-sdk/dist/0.5.5/browser-matrix-0.5.5.js"></script>
+    <script src="node_modules/matrix-js-sdk/dist/browser-matrix-dev.js"></script>
+    <script src="bower_components/moment/min/moment.min.js", type="text/javascript"></script>
     <link rel="import" href="/src/interlocutor-app/interlocutor-app.html">
-    <script>
-      window.client = matrixcs.createClient("http://localhost:8008")
-      client.loginWithPassword('pik', '1234').then((result)=> {
-        client.credentials.userId = result.user_id
-        client._http.opts.accessToken  = result.access_token
-        client.startClient({ pendingEventOrdering: 'detached' })
-      }, (err) => {
-        console.log(err)
-      })
-    </script>
   </head>
   <body>
-    <interlocutor-app></interlocutor-app>
+    <interlocutor-app
+      default-login="pik"
+      default-password="1234"
+      room-id="!JimgvUxVVvdTmXyaeY:pik-test"
+      home-server-address="http://localhost:8008">
+    </interlocutor-app>
   </body>
+  <script>
+  class NotifyArray extends Array {
+    constructor() {
+      super()
+      this._push = this.push
+      this._splice = this.splice
+      this._listeners = new Set()
+      this.push = function() {
+        debugger
+        this._push(...arguments)
+        this.notifyListeners(this.length, arguments, [])
+      }
+    }
+
+    notifyListeners(index, added, removed) {
+      console.log('notifyingListeners', added)
+      for (let listener of this._listeners) {
+        /* (array, path, index, added, removed) */
+        listener.target._notifySplice(this, listener.notifyPath, index, added, [])
+      }
+    }
+
+    addListener(listener, notifyPath) {
+      this._listeners.add({ target: listener, notifyPath: notifyPath })
+    }
+
+    removeListener(listener, notifyPath) {
+      this._listeners.delete({ target: listener, notifyPath: notifyPath })
+    }
+  }
+  </script>
 </html>

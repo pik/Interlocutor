@@ -1,3 +1,4 @@
+
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 <link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
@@ -14,47 +15,68 @@
         flex-direction: column;
         max-height: 20em;
       }
+      .comment-children {
+        margin-left: 2em;
+      }
+      #commentBody {
+        margin-left: 2em;
+        background: #FFF4CD
+      }
+      .comment-posted-at {
+        color: #939393
+      }
+      .edit-icon {
+        height: 2em;
+        width: 2em;
+      }
+      .flagged {
+        color: red;
+      }
+
     </style>
     <div class='comment-row1-wrapper'>
       <template is="dom-if" if="[[canUpVote]]">
-        <paper-icon-button class='fa fa-caret-up upvote-comment'></paper-icon-button>
+        <paper-icon-button class='upvote-comment'></paper-icon-button>
       </template>
       <div class='comment-body-wrapper collapse-comment'>
         <div>
-          <paper-button class="heading"
+          <span class='comment-author-name'>[[commentAuthor]]</span>
+          <span class='comment-posted-at'>[[postedAt(comment.origin_server_ts)]]</span>
+          <template is="dom-if" if="[[canEdit]]">
+            <span> <paper-icon-button icon='create' class="edit-icon" on-tap="openEditOverlay"></paper-icon-button> </span>
+          </template>
+          <template is="dom-if" if="[[canFlag]]">
+            <span> <paper-icon-button icon='flag' class$="[[_classBinding(flagged, 'flagged')]]" id="flagIcon" on-tap="toggleFlag"></paper-icon-button> </span>
+          </template>
+          <paper-icon-button class="heading"
             aria-expanded$="[[commentBodyOpen]]"
             aria-controls="commentBodyCollapse"
-            on-tap="toggle">
+            on-tap="toggleCollapse"
+            icon$="[[_classBinding(commentBodyOpen, 'expand-less', 'expand-more')]]">
             -
-          </paper-button>
-
-          <span class='comment-author-name'>[[authorName]]</span>
-          <span class='comment-posted-at'>[[commentDate]]</span>
-          <template dom-if="[[canEdit(loggedIn)]]">
-            <span> <paper-icon-button icon='create'></paper-icon-button> </span>
-          </template>
+          </paper-icon-button>
         </div>
         <iron-collapse id="commentBodyCollapse" tabindex="0" opened="[[commentBodyOpen]]">
-          <span id='commentBody'>[[body]]</span>
+          <span id='commentBody'>[[text]]</span>
         </iron-collapse>
 
       </div>
     </div>
     <iron-collapse id="commentRowTwo" tabindex="0" opened="[[commentBodyOpen]]">
       <div class='comment-row2-wrapper'>
-        <template is="dom-if" if="[[canReply(loggedIn, replyOpen)]]">
-          <paper-button class='comment-reply' on-tap="toggleReply">[reply]</paper-button>
+        <template is="dom-if" if="[[canReply(userId)]]">
+          <paper-button class='comment-reply' on-tap="openReplyOverlay">[reply]</paper-button>
         </template>
-        <template is="dom-if" if="[[replyOpen]]">
-          <matrix-reply parent="[[comment]]"></matrix-reply>
-        </template>
+        <!-- <template is="dom-if" if="[[replyOpen]]"> -->
+        <!-- </template> -->
       </div>
       <div class='comment-children'>
         <template is="dom-repeat" items="[[children]]" as="comment">
-          <matrix-comment comment=[[comment]]></matrix-comment>
+          <matrix-comment id="[[comment.event_id]]" comment="[[comment]]" state="[[state]]" user-id="[[userId]]" last-updated="[[lastUpdated]]"></matrix-comment>
         </template>
       </div>
     </iron-collapse>
+    <matrix-reply id="reply" tabindex="-1" with-backdrop></matrix-reply>
   </template>
 
   <script>
@@ -69,22 +91,46 @@
         'cancel': 'toggleReply',
       },
       properties: {
-        loggedIn: {
-          type: Boolean,
-          value: true,
+        state: {
+          type: Object,
+          value: function() { return {} },
+        },
+        comment: {
+          type: Object,
+          value: function() { return {} },
           notify: true,
         },
+
+        dataChildren: {
+          type: Array,
+          value: function() { return [] },
+          computed: '_alias(comment.children)'
+        },
+
         children: {
           type: Array,
           value: function() { return [] },
+          computed: '_children(dataChildren.splices)',
+        },
+
+        childrenCount: {
+          type: Number,
+          value: 0,
+          computed: '_count(children.splices, children)'
+        },
+        body: {
+          type: Object,
+          value: function() { return {} },
+          computed: '_alias(comment.content.body)'
+        },
+        text: {
+          type: String,
+          value: '',
+          computed: '_text(lastUpdated)'
         },
         commentBodyOpen: {
           type: Boolean,
           value: true,
-        },
-        body: {
-          type: String,
-          value: `I've been playing around with Matrix the past couple days and built a toy comment system ( there are 5 actions, CREATE/REPLY, EDIT, UPVOTE, FLAG ). Currently Matrix is used only to provide a distributed <message log> where upvote/flag/edit events are aggregated on the client to produce current state:`.trim(),
         },
         authorName: {
           type: String,
@@ -99,33 +145,107 @@
           value: false,
           notify: true,
         },
-        user: {
-          type: Object,
-          value: function() { return {} }
+        userId: {
+          type: String,
+          value: null,
+          notify: true
         },
-        comment: {
-          type: Object,
-          value: function() { return {} }
+        canEdit: {
+          type: Boolean,
+          value: false,
+          computed: '_canEdit(userId, comment)'
+        },
+        canFlag: {
+          type: Boolean,
+          value: false,
+          computed: '_canFlag(userId, comment)'
+        },
+        flagged: {
+          type: Boolean,
+          value: false,
+          computed: '_flagged(lastUpdated)'
+        },
+        commentAuthor: {
+          type: String,
+          value: '',
+          computed: '_commentAuthor(lastUpdated)'
         }
       },
-
-      canEdit: function(loggedIn) {
-        return loggedIn && this.user && this.comment && this.user.id == this.comment.id
+      attached() {
+        this.comment.children.addListener(this, 'dataChildren')
       },
 
-      canReply: function(loggedIn, replyOpen) {
-        console.log('canReply', loggedIn, replyOpen)
-        return !replyOpen
-        // return loggedIn && !replyOpen
+      dettached() {
+        this.comment.children.removeListener(this, 'dataChildren')
       },
 
-      toggleReply: function(_) {
-        this.replyOpen = !this.replyOpen
+      _commentAuthor() {
+        return this.comment.user_id || this.comment.sender
       },
 
-      toggle: function(_) {
+      _flagged() {
+        return this.comment.flagged[this.userId]
+      },
+
+      toggleFlag() {
+        this.sendFlagComment(this.comment.event_id, !this.flagged).then((success) => {
+        }, (error) => {
+          console.log(error)
+          // this.flagged = !this.flagged
+        })
+      },
+
+      _text() {
+        return this.body.text
+      },
+
+      // _dataChildren(comment, state) {
+      //   if (this.state[comment.event_id]) {
+      //     return this.state[comment.event_id]
+      //   } else {
+      //     this.state[comment.event_id] = []
+      //     return this.state[comment.event_id]
+      //   }
+      // },
+
+      _children(_) {
+        return this.dataChildren.filter((comment) => {
+          return comment.content.msgtype === 'm.comment' && this.permitted(comment)
+        })
+      },
+
+      _canEdit: function(userId, comment) {
+        return userId && comment && (comment.user_id === userId)
+      },
+
+      _canFlag: function(userId, _) {
+        return userId
+      },
+
+      canReply: function(userId) {
+        return userId
+      },
+
+      openReplyOverlay: function() {
+        this.$.reply.targetId = this.comment.event_id
+        this.$.reply.action = 'm.comment'
+        this.$.reply.open()
+      },
+
+      openEditOverlay: function() {
+        this.$.reply.targetId = this.comment.event_id
+        this.$.reply.action = 'm.edit'
+        this.$.reply.content = this.body.text
+        this.$.reply.open()
+      },
+
+      toggleCollapse: function(_) {
         this.commentBodyOpen = !this.commentBodyOpen
       },
+
+      postedAt: function(timestamp) {
+        return moment(timestamp).fromNow()
+      }
 
     });
   </script>

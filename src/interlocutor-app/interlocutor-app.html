@@ -5,58 +5,152 @@
 <link rel="import" href="../elements/matrix-comment.html">
 <link rel="import" href="../elements/matrix-login.html">
 <link rel="import" href="../elements/matrix-settings.html">
+<link rel="import" href="../elements/poly-helper-behavior.html">
+<link rel="import" href="../elements/matrix-behavior.html">
 <dom-module id="interlocutor-app">
   <template>
     <style>
       :host {
       }
     </style>
-    <template is="dom-if" if="[[loggedIn]]">
-        <span>[[username]]</span>
+    <template is="dom-if" if="[[userId]]">
+        <span>[[userId]]</span>
         <paper-button on-tap="logout">Logout</paper-button>
     </template>
-    <template is="dom-if" if="[[!loggedIn]]">
+    <template is="dom-if" if="[[!userId]]">
       <paper-button on-tap="openLogin">Login</paper-button>
     </template>
     <paper-icon-button on-tap="openSettings" icon="settings"></paper-icon-button>
-    <matrix-settings id="settings" tabindex="-1" with-backdrop></matrix-settings>
+    <matrix-settings id="settings" tabindex="-1" settings="{{settings}}" with-backdrop></matrix-settings>
     <matrix-login id="login" tabindex="-1" with-backdrop></matrix-login>
-    <matrix-comment></matrix-comment>
+    <template is="dom-repeat" items="[[topLevelComments]]" as="comment">
+      <matrix-comment id="[[comment.event_id]]" comment="[[comment]]" state="[[state]]" user-id="[[userId]]" last-updated="[[lastUpdated]]"></matrix-comment>
+    </template>
   </template>
 
 <script>
   Polymer({
 
     is: 'interlocutor-app',
+    behaviors: [
+      MatrixBehavior, PolyHelperBehavior
+    ],
+    listeners: {
+      'settings-updated': '_touchLastUpdated'
+    },
     properties: {
+      homeServerAddress: {
+        type: String,
+      },
+      defaultLogin: {
+        type: String,
+      },
+      defaultPassword: {
+        type: String,
+      },
+      roomId: {
+        type: String,
+      },
+      room: {
+        type: Object,
+        value() { return {} }
+      },
+
+      state: {
+        type: Object,
+        value: function() { return {} },
+        notify: true,
+      },
+
+      dataTopLevelComments: {
+        type: Array,
+        value: function() { return [] },
+      },
+
+      topLevelComments: {
+        type: Array,
+        value: function() { return [] },
+        computed: '_topLevelComments(dataTopLevelComments.splices)'
+      },
       user: {
         type: Object,
         value: function() { return {} }
       },
-      loggedIn: {
-        type: Boolean,
-        value: false,
+      userId: {
+        type: String,
+        value: null,
+      },
+      lastUpdated: {
+        type: Number,
+        value: null,
+        notify: true
       }
     },
-    attached: function() {
 
+    attached() {
+      window.client = this.client = matrixcs.createClient(this.homeServerAddress)
+      client.txnId = 0
+      this.login(this.defaultLogin, this.defaultPassword).then((result)=> {
+        client.startClient({ pendingEventOrdering: 'detached' })
+      }, (err) => {
+        console.log(err)
+      })
+      setTimeout(()=> {
+        window.room = this.room = client.getRoom(this.roomId)
+        this.state[this.roomId] = { children: [] }
+        try {
+          this.buildInitialRoomState().then((_) => {
+            client.on("Room.timeline", (matrixEvent, room, toStartOfTimeline) => {
+              const event = matrixEvent.event
+              console.log('received Room.timeline event', event.event_id, event.type, room.room_id)
+              this.processEvent(event)
+            })
+            // FIX THIS ALSO
+            this.dataTopLevelComments = this.state[this.roomId].children
+            this.dataTopLevelComments.addListener(this, 'dataTopLevelComments')
+          }, (err) => {
+            console.log(err)
+          })
+        } catch (e) {
+          console.log(e)
+        }
+      }, 1000)
     },
 
-    toggle: function(selector) {
+    _touchLastUpdated() {
+      this.lastUpdated += 0.1
+    },
+
+    _topLevelComments: function() {
+      console.log('_topLevelComments')
+      return this.dataTopLevelComments.filter((comment) => {
+        return comment.content.msgtype === 'm.comment' && this.permitted(comment)
+      })
+    },
+
+    logout: function() {
+      client.logout().then((success) => {
+        this.userId = null
+        delete client.credentials.userId
+        delete client._http.opts.accessToken
+      })
+    },
+
+    _credentials: function() {
+      return client.credentials
+    },
+
+    toggle(selector) {
       this.commentBodyOpen = !this.commentBodyOpen
     },
 
-    openLogin: function() {
+    openLogin() {
       this.$.login.open()
     },
 
-    openSettings: function() {
+    openSettings() {
       this.$.settings.open()
     },
-
-    canReply: function() {
-
-    }
 
   });
 </script>

@@ -4,12 +4,20 @@ var PolyHelperBehavior = {
     return prop1 === prop2
   },
 
+  _classBinding(condition, trueClass, falseClass) {
+    return condition ? (trueClass || '') : (falseClass || '')
+  },
+
   _classBindingEql(property, condition, trueClass, falseClass) {
     if (condition === property) {
       return trueClass
     } else {
       return falseClass || ""
     }
+  },
+
+  _count(_, arr) {
+    return arr ? arr.length : 0
   },
 
   _alias(target, defaultVal) {

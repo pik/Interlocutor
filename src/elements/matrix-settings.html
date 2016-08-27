@@ -2,33 +2,50 @@
 <link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../../bower_components/iron-overlay-behavior/iron-overlay-behavior.html">
+<link rel="import" href="../../bower_components/paper-slider/paper-slider.html">
+<link rel="import" href="./poly-helper-behavior.html">
 
 <dom-module id="matrix-settings">
   <template>
     <style is="custom-style">
       :host {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
         background: white;
         color: black;
         padding: 5em;
         box-shadow: rgba(0, 0, 0, 0.24) -2px 5px 12px 0px, rgba(0, 0, 0, 0.12) 0px 0px 12px 0px;
       }
-      --paper-icon-button: {
-        width: 100px;
-        height: 100px;
-        --iron-icon-height: 100px;
-        --iron-icon-width: 100px;
-      }
       .on {
         color: blue
       }
-      paper-icon-button {
-        width: 10em;
-        height: 10em;
+      paper-icon-button[icon="settings-power"] {
+        width: 5em;
+        height: 5em;
       }
+
+      paper-icon-button[icon="remove-circle"] {
+        color: black;
+        width: 2em;
+        height: 2em;
+      }
+
     </style>
     <div>
-      <paper-icon-button icon="settings-power" class$="[[_classBinding(filterOn, 'on')]]" on-tap="toggle"></paper-icon-button>
+      <paper-icon-button icon="settings-power" class$="[[_classBinding(settings.filterOn, 'on')]]" on-tap="toggle"></paper-icon-button>
+      <div>Flag Kill threshold: </div>
+      <paper-slider id="flagKillThreshold" min="0" max="100" value="{{settings.flagKillThreshold}}" editable></paper-slider>
+      <div>Auto-collapse below vote threshold: </div>
+      <paper-slider id="voteCollapseThreshold" min="-200" max="200" value="{{settings.voteCollapseThreshold}}" editable></paper-slider>
+      <div> Moderator Identities: </div>
+      <div class="moderator-list" class$="[[_classBinding(settings.filterOn, 'on')]]">
+        <template is="dom-repeat" items="[[trustedIdentities]]" as="identity">
+          <p> [[identity]]<paper-icon-button icon="remove-circle" on-tap='removeIdentity' value="[[identity]]"></paper-icon-button>
+        </template></p>
+      </div>
     </div>
+    <paper-input value='{{newIdentity}}' label="Add trusted identities" on-keydown="identityInput"></paper-input>
   </template>
 
 <script>
@@ -36,26 +53,63 @@
 
     is: 'matrix-settings',
     behaviors: [
-      Polymer.IronOverlayBehavior
+      Polymer.IronOverlayBehavior,
+      PolyHelperBehavior
+    ],
+    observers: [
+      'settingsUpdated(config.*)'
     ],
     properties: {
-      filterOn: {
-        type: Boolean,
-        value: true,
+      trustedIdentities: {
+        type: Array,
+        value: function() {
+          return []
+        },
+        computed: '_trustedIdentities(settings.trustedIdentities)'
+      },
+      settings: {
+        type: Object,
+        value: function() { return {} }
+      },
+      newIdentity: {
+        type: String,
+        value: '',
+        notify: true
       }
-
-    },
-    _classBinding: function(depends, cls) {
-      return depends ? cls : ''
     },
 
-    toggle: function(selector) {
-      this.filterOn = !this.filterOn
+    identityInput(e) {
+      if (e.keyCode == 13) {
+        this.config.trustedIdentities[this.newIdentity] = {}
+        this.newIdentity = ''
+        this.notifyPath('settings.trustedIdentities')
+      }
     },
 
-    canReply: function() {
+    removeIdentity(event) {
+      var identity = event.currentTarget.value
+      delete this.config.trustedIdentities[identity]
+      this.notifyPath('settings.trustedIdentities')
+    },
 
-    }
+    settingsUpdated() {
+      console.log('settingsUpdated')
+      this.fire('settings-updated')
+    },
+
+    _trustedIdentities(identities) {
+      console.log('_trustedIdentities')
+      return this.settings.trustedIdentities ? Object.keys(this.settings.trustedIdentities) : []
+    },
+
+    toggle(selector) {
+      var filterOn = !this.settings.filterOn
+      this.settings.filterOn = filterOn
+      this.$.flagKillThreshold.disabled = !filterOn
+      this.$.voteCollapseThreshold.disabled = !filterOn
+      this.notifyPath('settings.filterOn')
+    },
+
 
   });
 </script>

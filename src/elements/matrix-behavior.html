@@ -1,123 +1,243 @@
 <script type="text/javascript">
-var exampleRoom = {
-  // A public visibility indicates that the room will be shown in the published room list.
-  // A private visibility will hide the room from the published room list.
-  // Rooms default to private visibility if this key is not included.
-  // NB: This should not be confused with join_rules which also uses the word public. One of: ["public", "private"]
-  visibility: 'public',
-  // If this is included, an m.room.name event will be sent into the room to indicate the name of the room.
-  // See Room Events for more information on m.room.name.
-  name: 'example-comment-room-' + Math.random().toString(16).substring(2),
-  // Convenience parameter for setting various default state events based on a preset. Must be either:
-  // private_chat => join_rules is set to invite. history_visibility is set to shared.
-  // trusted_private_chat => join_rules is set to invite. history_visibility is set to shared.
-  // All invitees are given the same power level as the room creator.
-  // public_chat: => join_rules is set to public. history_visibility is set to shared.
-  // One of: ["private_chat", "public_chat", "trusted_private_chat"]
-  preset: 'public_chat',
-  guest_can_join: true,
-}
+  const exampleRoom = {
+    // A public visibility indicates that the room will be shown in the published room list.
+    // A private visibility will hide the room from the published room list.
+    // Rooms default to private visibility if this key is not included.
+    // NB: This should not be confused with join_rules which also uses the word public. One of: ["public", "private"]
+    visibility: 'public',
+    // If this is included, an m.room.name event will be sent into the room to indicate the name of the room.
+    // See Room Events for more information on m.room.name.
+    name: 'example-comment-room-' + Math.random().toString(16).substring(2),
+    // Convenience parameter for setting various default state events based on a preset. Must be either:
+    // private_chat => join_rules is set to invite. history_visibility is set to shared.
+    // trusted_private_chat => join_rules is set to invite. history_visibility is set to shared.
+    // All invitees are given the same power level as the room creator.
+    // public_chat: => join_rules is set to public. history_visibility is set to shared.
+    // One of: ["private_chat", "public_chat", "trusted_private_chat"]
+    preset: 'public_chat',
+    guest_can_join: true,
+  }
 
-var MatrixBehavior = {
-  client: null,
-  attached() {
-  },
+  const __matrixBehaviorInstances = new Set()
+  const __settings = {
+            flagKillThreshold: 1,
+            voteCollapseThreshold: -1,
+            filterOn: true,
+            trustedIdentities: { '@pik:pik-test': {} }
+          }
+  let __settingsChangedCounter = 0
+  const MatrixBehavior = {
 
-  login(username, password) {
-    _login = function () {
-        delete client.credentials.userId
-        delete client._http.opts.accessToken
-        client.loginWithPassword(username, password).then((result) => {
-        client.credentials.userId = result.user_id
-        client._http.opts.accessToken  = result.access_token
-      }, (error) => {
-        console.log(error)
+    _settingsValueChanged(changes) {
+      for (let instance of __matrixBehaviorInstances) {
+        if (instance !== this) {
+          __settingsChangedCounter += 1
+          console.log('_settingsValueChanged', this, changes.path, changes.value, __settingsChangedCounter)
+          instance.set(changes.path, changes.value)
+        }
+      }
+    },
+
+    attached() {
+      __matrixBehaviorInstances.add(this)
+    },
+
+    dettached() {
+      __matrixBehaviorInstances.delete(this)
+    },
+
+    observers: [
+      '_settingsValueChanged(settings.*)'
+    ],
+    properties: {
+      settings: {
+        type: Object,
+        value() {
+          return __settings
+        },
+      },
+      client: {
+        type: Object,
+        value: null,
+      }
+    },
+
+    permitted (comment) {
+      return true
+      if (!settings.filterOn) return true
+      const flagged = comment.flagged
+      let flagCount = 0
+      const identities = Object.keys(flagged).filter((identity) => {
+        return this.settings.trustedIdentities[identity]
       })
-    }.bind(this)
-    client.logout().then(_login)
-  },
+      for (let i=0; i < identities.length; i++) {
+        if (flagged[identities[i]]) flagCount += 1
+      }
+      console.log('permitted', flagCount, settings.flagKillThreshold)
+      return (flagCount < settings.flagKillThreshold)
+    },
 
-  sendMessage(roomId, content, txnId) {
-    return
-    // return this.client.sendEvent( roomId, "m.room.comment", content, txnId )
-  },
-  /**
-   * Create a comment, it can be a response to an existing comment or top-level
-   * in which case the commentId is set to the roomId.
-   * @param {string} roomId
-   * @param {string} commentId
-   * @return {module:client.Promise} Resolves: TODO
-   * @return {module:http-api.MatrixError} Rejects: with an error response.
-   */
-  sendCreateComment (commentId, text) {
-    const content = {
-      msgtype: 'm.comment',
-      body: { text: text, target_id: commentId }
-    }
-    return this.sendMessage(this.roomId, content,  this.txnId)
-  },
+    login(username, password) {
+      _login = function () {
+          delete client.credentials.userId
+          delete client._http.opts.accessToken
+          return client.loginWithPassword(username, password).then((result) => {
+            client.credentials.userId = result.user_id
+            client._http.opts.accessToken  = result.access_token
+            this.userId = client.credentials.userId
+        }, (error) => {
+          console.log(error)
+        })
+      }.bind(this)
+      if (client.credentials.userId) {
+        return client.logout().then(_login)
+      } else {
+        return _login()
+      }
+    },
 
-  /**
-   * Upvote a comment, can only be done once per user.
-   * @param {string} roomId
-   * @param {string} commentId
-   * @return {module:client.Promise} Resolves: TODO
-   * @return {module:http-api.MatrixError} Rejects: with an error response.
-   */
-  sendUpVoteComment (commentId) {
-    const content = {
-      msgtype: 'm.vote',
-      body: { target_id: commentId, info: 1 }
-    }
-    return this.sendMessage(this.roomId, content, this.txnId)
-  },
+    addEvent (event) {
+      event.flags = new Set()
+      event.votes = new Set()
+      event.score = 1
+      event.flagged = {}
+      event.children = new NotifyArray()
+      // In the future let's raise if a top-level comment doesn't supply
+      // roomId, rather than defaulting.
+      const targetId = event.content.body.target_id || room.roomId
+      // Need to use Polymer Push for NotifyPath
+      // I hate breaking separation of concerns like this
+      this.state[targetId].children.push(event)
+      this.state[event.event_id] = event
+      this.lastUpdated = event.origin_server_ts
+    },
 
-  /**
-   * downVote a comment, can only be done once per user.
-   * @param {string} roomId
-   * @param {string} commentId
-   * @return {module:client.Promise} Resolves: TODO
-   * @return {module:http-api.MatrixError} Rejects: with an error response.
-   */
-  sendDownVoteComment (commentId) {
-    const content = {
-      msgtype: 'm.vote',
-      body: { target_id: commentId, info: -1 }
-    }
-    return this.sendMessage(roomId, content, txnId)
-  },
+    processEvent (event) {
+      console.log('Processing event', event.user_id || event.sender, event.event_id, event.content.msgtype, event.content.body)
+      if (event.type !== 'm.room.comment') return false
+      const content = event.content
+      let target
+      if (content.msgtype === 'm.comment') {
+        target = event
+        this.addEvent(event)
+      } else {
+        target = this.state[content.body.target_id]
+        if (!target) {
+          return console.log('illegal event', event)
+        }
+        switch (content.msgtype) {
+          case 'm.vote':
+            if (target.votes.add(event)) {
+              target.score += content.body.value
+            }
+            break
+          case 'm.flag':
+            if (target.flags.add(event)) {
+              target.flagged[event.user_id || event.sender] = content.body.value
+            }
+            break
+          case 'm.edit':
+            target.content.body.text = content.body.text
+            this.lastUpdated = event.origin_server_ts
+            break
+      }
+      this.lastUpdated = event.origin_server_ts
+      }
+    },
 
-  editComment(event, editEvent) {
-  },
+    buildInitialRoomState () {
+      console.log('Building initial comment-tree state..')
+      const limit = 1000
+      return client.roomInitialSync(room.roomId, limit).then((result) => {
+        const events = result.messages.chunk.sort((e1, e2) => {
+          return e1.origin_server_ts - e2.origin_server_ts
+        })
+        for (let event of events) {
+          // All Interloctur events are of type 'm.room.comment'
+          if (event.type !== 'm.room.comment') continue
+          this.processEvent(event)
+        }
+      })
+    },
 
-  /**
-   * Edit a comment, must have been a comment previously created by the same user.
-   * @param {string} commentId
-   * @param {string} text
-   * @return {module:client.Promise} Resolves: TODO
-   * @return {module:http-api.MatrixError} Rejects: with an error response.
-   */
-  sendEditComment (commentId, text) {
-    const content = {
-      msgtype: 'm.edit',
-      body: { target_id: commentId, text: text }
-    }
-    return this.sendMessage(roomId, content,  this.txnId)
-  },
+    sendMessage(roomId, content, txnId) {
+      return client.sendEvent(roomId, "m.room.comment", content, txnId )
+    },
+    /**
+     * Create a comment, it can be a response to an existing comment or top-level
+     * in which case the commentId is set to the roomId.
+     * @param {string} roomId
+     * @param {string} commentId
+     * @return {module:client.Promise} Resolves: TODO
+     * @return {module:http-api.MatrixError} Rejects: with an error response.
+     */
+    sendCreateComment (commentId, text) {
+      const content = {
+        msgtype: 'm.comment',
+        body: { text: text, target_id: commentId }
+      }
+      return this.sendMessage(room.roomId, content,  (client.txnId+=1))
+    },
 
-  /**
-   * Flag a comment.
-   * @param {string} commentId
-   * @return {module:client.Promise} Resolves: TODO
-   * @return {module:http-api.MatrixError} Rejects: with an error response.
-   */
-  sendFlagComment (commentId) {
-    const content = {
-      msgtype: 'm.flag',
-      body: { target_id: commentId, info: 1 }
-    }
-    return this.sendMessage(roomId, content, this.txnId)
-  },
-}
+    /**
+     * Upvote a comment, can only be done once per user.
+     * @param {string} roomId
+     * @param {string} commentId
+     * @return {module:client.Promise} Resolves: TODO
+     * @return {module:http-api.MatrixError} Rejects: with an error response.
+     */
+    sendUpVoteComment (commentId) {
+      const content = {
+        msgtype: 'm.vote',
+        body: { target_id: commentId, info: 1 }
+      }
+      return this.sendMessage(this.roomId, content, this.txnId)
+    },
 
+    /**
+     * downVote a comment, can only be done once per user.
+     * @param {string} roomId
+     * @param {string} commentId
+     * @return {module:client.Promise} Resolves: TODO
+     * @return {module:http-api.MatrixError} Rejects: with an error response.
+     */
+    sendDownVoteComment (commentId) {
+      const content = {
+        msgtype: 'm.vote',
+        body: { target_id: commentId, info: -1 }
+      }
+      return this.sendMessage(roomId, content, txnId)
+    },
+
+    /**
+     * Edit a comment, must have been a comment previously created by the same user.
+     * @param {string} commentId
+     * @param {string} text
+     * @return {module:client.Promise} Resolves: TODO
+     * @return {module:http-api.MatrixError} Rejects: with an error response.
+     */
+    sendEditComment (commentId, text) {
+      const content = {
+        msgtype: 'm.edit',
+        body: { target_id: commentId, text: text }
+      }
+      return this.sendMessage(room.roomId, content,  (client.txnId+=1))
+    },
+
+    /**
+     * Flag or Unflag a comment.
+     * @param {string} commentId
+     * @param {boolean} value
+     * @return {module:client.Promise} Resolves: TODO
+     * @return {module:http-api.MatrixError} Rejects: with an error response.
+     */
+    sendFlagComment (commentId, value) {
+      console.log('sendFlagComment', commentId)
+      const content = {
+        msgtype: 'm.flag',
+        body: { target_id: commentId, value: value}
+      }
+      return this.sendMessage(room.roomId, content, client.txnId)
+    },
+  }
 </script>
