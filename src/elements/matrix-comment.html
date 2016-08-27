@@ -1,0 +1,132 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/iron-collapse/iron-collapse.html">
+<link rel="import" href="./matrix-reply.html">
+<link rel="import" href="./poly-helper-behavior.html">
+<link rel="import" href="./matrix-behavior.html">
+
+<dom-module id="matrix-comment">
+  <template>
+    <style>
+      :host {
+        display: flex;
+        flex-direction: column;
+        max-height: 20em;
+      }
+    </style>
+    <div class='comment-row1-wrapper'>
+      <template is="dom-if" if="[[canUpVote]]">
+        <paper-icon-button class='fa fa-caret-up upvote-comment'></paper-icon-button>
+      </template>
+      <div class='comment-body-wrapper collapse-comment'>
+        <div>
+          <paper-button class="heading"
+            aria-expanded$="[[commentBodyOpen]]"
+            aria-controls="commentBodyCollapse"
+            on-tap="toggle">
+            -
+          </paper-button>
+
+          <span class='comment-author-name'>[[authorName]]</span>
+          <span class='comment-posted-at'>[[commentDate]]</span>
+          <template dom-if="[[canEdit(loggedIn)]]">
+            <span> <paper-icon-button icon='create'></paper-icon-button> </span>
+          </template>
+        </div>
+        <iron-collapse id="commentBodyCollapse" tabindex="0" opened="[[commentBodyOpen]]">
+          <span id='commentBody'>[[body]]</span>
+        </iron-collapse>
+
+      </div>
+    </div>
+    <iron-collapse id="commentRowTwo" tabindex="0" opened="[[commentBodyOpen]]">
+      <div class='comment-row2-wrapper'>
+        <template is="dom-if" if="[[canReply(loggedIn, replyOpen)]]">
+          <paper-button class='comment-reply' on-tap="toggleReply">[reply]</paper-button>
+        </template>
+        <template is="dom-if" if="[[replyOpen]]">
+          <matrix-reply parent="[[comment]]"></matrix-reply>
+        </template>
+      </div>
+      <div class='comment-children'>
+        <template is="dom-repeat" items="[[children]]" as="comment">
+          <matrix-comment comment=[[comment]]></matrix-comment>
+        </template>
+      </div>
+    </iron-collapse>
+  </template>
+
+  <script>
+    Polymer({
+
+      is: 'matrix-comment',
+      behaviors: [
+        PolyHelperBehavior,
+        MatrixBehavior
+      ],
+      listeners: {
+        'cancel': 'toggleReply',
+      },
+      properties: {
+        loggedIn: {
+          type: Boolean,
+          value: true,
+          notify: true,
+        },
+        children: {
+          type: Array,
+          value: function() { return [] },
+        },
+        commentBodyOpen: {
+          type: Boolean,
+          value: true,
+        },
+        body: {
+          type: String,
+          value: `I've been playing around with Matrix the past couple days and built a toy comment system ( there are 5 actions, CREATE/REPLY, EDIT, UPVOTE, FLAG ). Currently Matrix is used only to provide a distributed <message log> where upvote/flag/edit events are aggregated on the client to produce current state:`.trim(),
+        },
+        authorName: {
+          type: String,
+          value: 'pik'
+        },
+        commentDate: {
+          type: String,
+          value: 'Edited 1 hour ago'
+        },
+        replyOpen: {
+          type: Boolean,
+          value: false,
+          notify: true,
+        },
+        user: {
+          type: Object,
+          value: function() { return {} }
+        },
+        comment: {
+          type: Object,
+          value: function() { return {} }
+        }
+      },
+
+      canEdit: function(loggedIn) {
+        return loggedIn && this.user && this.comment && this.user.id == this.comment.id
+      },
+
+      canReply: function(loggedIn, replyOpen) {
+        console.log('canReply', loggedIn, replyOpen)
+        return !replyOpen
+        // return loggedIn && !replyOpen
+      },
+
+      toggleReply: function(_) {
+        this.replyOpen = !this.replyOpen
+      },
+
+      toggle: function(_) {
+        this.commentBodyOpen = !this.commentBodyOpen
+      },
+
+    });
+  </script>
+</dom-module>

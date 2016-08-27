@@ -1,0 +1,63 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../elements/matrix-comment.html">
+<link rel="import" href="../elements/matrix-login.html">
+<link rel="import" href="../elements/matrix-settings.html">
+<dom-module id="interlocutor-app">
+  <template>
+    <style>
+      :host {
+      }
+    </style>
+    <template is="dom-if" if="[[loggedIn]]">
+        <span>[[username]]</span>
+        <paper-button on-tap="logout">Logout</paper-button>
+    </template>
+    <template is="dom-if" if="[[!loggedIn]]">
+      <paper-button on-tap="openLogin">Login</paper-button>
+    </template>
+    <paper-icon-button on-tap="openSettings" icon="settings"></paper-icon-button>
+    <matrix-settings id="settings" tabindex="-1" with-backdrop></matrix-settings>
+    <matrix-login id="login" tabindex="-1" with-backdrop></matrix-login>
+    <matrix-comment></matrix-comment>
+  </template>
+
+<script>
+  Polymer({
+
+    is: 'interlocutor-app',
+    properties: {
+      user: {
+        type: Object,
+        value: function() { return {} }
+      },
+      loggedIn: {
+        type: Boolean,
+        value: false,
+      }
+    },
+    attached: function() {
+
+    },
+
+    toggle: function(selector) {
+      this.commentBodyOpen = !this.commentBodyOpen
+    },
+
+    openLogin: function() {
+      this.$.login.open()
+    },
+
+    openSettings: function() {
+      this.$.settings.open()
+    },
+
+    canReply: function() {
+
+    }
+
+  });
+</script>
+</dom-module>

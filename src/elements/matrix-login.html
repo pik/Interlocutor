@@ -1,0 +1,59 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/iron-overlay-behavior/iron-overlay-behavior.html">
+<link rel="import" href="./matrix-behavior.html">
+
+<dom-module id="matrix-login">
+  <template>
+    <style>
+      :host {
+        background: white;
+        color: black;
+        padding: 5em;
+        box-shadow: rgba(0, 0, 0, 0.24) -2px 5px 12px 0px, rgba(0, 0, 0, 0.12) 0px 0px 12px 0px;
+      }
+    </style>
+    <div>
+      <paper-input label="username"></paper-input>
+      <paper-input label="password"></paper-input>
+    </div>
+    <div>
+      <paper-button class='reply-cancel' on-tap="login">[login]</paper-button>
+      <br/>
+    </div>
+  </template>
+
+<script>
+  Polymer({
+
+    is: 'matrix-login',
+    behaviors: [
+      Polymer.IronOverlayBehavior,
+      MatrixBehavior
+    ],
+    properties: {
+      loggedIn: {
+        type: Boolean,
+        value: false,
+      }
+    },
+    attached() {
+      MatrixBehavior.foo = 5
+    },
+
+    login() {
+      this.MatrixBehavior.login()
+    },
+
+    toggle: function(selector) {
+      this.commentBodyOpen = !this.commentBodyOpen
+    },
+
+    canReply: function() {
+
+    }
+
+  });
+</script>
+</dom-module>

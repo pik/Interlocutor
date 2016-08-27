@@ -1,0 +1,6 @@
+{
+  "name": "interlocutor",
+  "short_name": "interlocutor",
+  "start_url": "/",
+  "display": "standalone"
+}

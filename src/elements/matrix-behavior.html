@@ -1,0 +1,123 @@
+<script type="text/javascript">
+var exampleRoom = {
+  // A public visibility indicates that the room will be shown in the published room list.
+  // A private visibility will hide the room from the published room list.
+  // Rooms default to private visibility if this key is not included.
+  // NB: This should not be confused with join_rules which also uses the word public. One of: ["public", "private"]
+  visibility: 'public',
+  // If this is included, an m.room.name event will be sent into the room to indicate the name of the room.
+  // See Room Events for more information on m.room.name.
+  name: 'example-comment-room-' + Math.random().toString(16).substring(2),
+  // Convenience parameter for setting various default state events based on a preset. Must be either:
+  // private_chat => join_rules is set to invite. history_visibility is set to shared.
+  // trusted_private_chat => join_rules is set to invite. history_visibility is set to shared.
+  // All invitees are given the same power level as the room creator.
+  // public_chat: => join_rules is set to public. history_visibility is set to shared.
+  // One of: ["private_chat", "public_chat", "trusted_private_chat"]
+  preset: 'public_chat',
+  guest_can_join: true,
+}
+
+var MatrixBehavior = {
+  client: null,
+  attached() {
+  },
+
+  login(username, password) {
+    _login = function () {
+        delete client.credentials.userId
+        delete client._http.opts.accessToken
+        client.loginWithPassword(username, password).then((result) => {
+        client.credentials.userId = result.user_id
+        client._http.opts.accessToken  = result.access_token
+      }, (error) => {
+        console.log(error)
+      })
+    }.bind(this)
+    client.logout().then(_login)
+  },
+
+  sendMessage(roomId, content, txnId) {
+    return
+    // return this.client.sendEvent( roomId, "m.room.comment", content, txnId )
+  },
+  /**
+   * Create a comment, it can be a response to an existing comment or top-level
+   * in which case the commentId is set to the roomId.
+   * @param {string} roomId
+   * @param {string} commentId
+   * @return {module:client.Promise} Resolves: TODO
+   * @return {module:http-api.MatrixError} Rejects: with an error response.
+   */
+  sendCreateComment (commentId, text) {
+    const content = {
+      msgtype: 'm.comment',
+      body: { text: text, target_id: commentId }
+    }
+    return this.sendMessage(this.roomId, content,  this.txnId)
+  },
+
+  /**
+   * Upvote a comment, can only be done once per user.
+   * @param {string} roomId
+   * @param {string} commentId
+   * @return {module:client.Promise} Resolves: TODO
+   * @return {module:http-api.MatrixError} Rejects: with an error response.
+   */
+  sendUpVoteComment (commentId) {
+    const content = {
+      msgtype: 'm.vote',
+      body: { target_id: commentId, info: 1 }
+    }
+    return this.sendMessage(this.roomId, content, this.txnId)
+  },
+
+  /**
+   * downVote a comment, can only be done once per user.
+   * @param {string} roomId
+   * @param {string} commentId
+   * @return {module:client.Promise} Resolves: TODO
+   * @return {module:http-api.MatrixError} Rejects: with an error response.
+   */
+  sendDownVoteComment (commentId) {
+    const content = {
+      msgtype: 'm.vote',
+      body: { target_id: commentId, info: -1 }
+    }
+    return this.sendMessage(roomId, content, txnId)
+  },
+
+  editComment(event, editEvent) {
+  },
+
+  /**
+   * Edit a comment, must have been a comment previously created by the same user.
+   * @param {string} commentId
+   * @param {string} text
+   * @return {module:client.Promise} Resolves: TODO
+   * @return {module:http-api.MatrixError} Rejects: with an error response.
+   */
+  sendEditComment (commentId, text) {
+    const content = {
+      msgtype: 'm.edit',
+      body: { target_id: commentId, text: text }
+    }
+    return this.sendMessage(roomId, content,  this.txnId)
+  },
+
+  /**
+   * Flag a comment.
+   * @param {string} commentId
+   * @return {module:client.Promise} Resolves: TODO
+   * @return {module:http-api.MatrixError} Rejects: with an error response.
+   */
+  sendFlagComment (commentId) {
+    const content = {
+      msgtype: 'm.flag',
+      body: { target_id: commentId, info: 1 }
+    }
+    return this.sendMessage(roomId, content, this.txnId)
+  },
+}
+
+</script>

@@ -1,0 +1,86 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-input/paper-textarea.html">
+<link rel="import" href="../../bower_components/iron-collapse/iron-collapse.html">
+<link rel="import" href="./matrix-behavior.html">
+<!--
+`matrix-comment`
+Comment Element
+
+@demo demo/index.html
+-->
+
+<dom-module id="matrix-reply">
+  <template>
+    <style>
+      :host {
+        display: flex;
+        flex-direction: column;
+        max-height: 20em;
+      }
+      #comment-content-posting {
+        min-height: 4em;
+      }
+    </style>
+    <div class='reply-body-wrapper'>
+      <template is="dom-if" if="[[!posting]]">
+        <paper-textarea id="replyBody" label="" value={{content}}></paper-textarea>
+      </template>
+      <template is="dom-if" if="[[posting]]">
+        <div id="comment-content-posting">
+            [[content]]
+        </div>
+      </template>
+    </div>
+    <div class='reply-row2-wrapper'>
+      <template is="dom-if" if="[[!posting]]">
+        <paper-button class='reply-cancel' on-tap="cancel">[cancel]</paper-button>
+        <paper-button class='reply-post' on-tap="post">[post]</paper-button>
+      </template>
+      <template is="dom-if" is="[[posting]]">
+
+      </template>
+      <br/>
+    </div>
+  </template>
+
+  <script>
+    Polymer({
+
+      is: 'matrix-reply',
+      behaviors: [
+        MatrixBehavior
+      ],
+      properties: {
+        content: {
+          type: String,
+          value: '',
+        },
+        parent: {
+          type: Object,
+          value: function() { return {} }
+        },
+        posting: {
+          type: Boolean,
+          value: false
+        },
+      },
+
+      toggle: function(selector) {
+        this.commentBodyOpen = !this.commentBodyOpen
+      },
+
+      post: function() {
+        this.sendCreateComment(this.parent.id, this.$.replyBody)
+        this.posting = true
+      },
+
+      cancel: function() {
+        this.content = ''
+        this.fire('cancel')
+      }
+
+    });
+  </script>
+</dom-module>

@@ -1,0 +1,26 @@
+<!doctype html>
+
+<html>
+  <head>
+    <title>interlocutor</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="/manifest.json">
+    <script src="/bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="node_modules/matrix-js-sdk/dist/0.5.5/browser-matrix-0.5.5.js"></script>
+    <link rel="import" href="/src/interlocutor-app/interlocutor-app.html">
+    <script>
+      window.client = matrixcs.createClient("http://localhost:8008")
+      client.loginWithPassword('pik', '1234').then((result)=> {
+        client.credentials.userId = result.user_id
+        client._http.opts.accessToken  = result.access_token
+        client.startClient({ pendingEventOrdering: 'detached' })
+      }, (err) => {
+        console.log(err)
+      })
+    </script>
+  </head>
+  <body>
+    <interlocutor-app></interlocutor-app>
+  </body>
+</html>
