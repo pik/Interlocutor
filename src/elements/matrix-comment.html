@@ -3,6 +3,8 @@
 <link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../../bower_components/iron-collapse/iron-collapse.html">
+<link rel="import" href="../../bower_components/iron-image/iron-image.html">
+
 <link rel="import" href="./matrix-reply.html">
 <link rel="import" href="./poly-helper-behavior.html">
 <link rel="import" href="./matrix-behavior.html">
@@ -35,18 +37,36 @@
 
     </style>
     <div class='comment-row1-wrapper'>
-      <template is="dom-if" if="[[canUpVote]]">
-        <paper-icon-button class='upvote-comment'></paper-icon-button>
-      </template>
       <div class='comment-body-wrapper collapse-comment'>
         <div>
+          <iron-image src="[[avatarUrl]]" style="width:1.8em; height:1.8em" sizing="contain"></iron-image>
           <span class='comment-author-name'>[[commentAuthor]]</span>
           <span class='comment-posted-at'>[[postedAt(comment.origin_server_ts)]]</span>
+          <template is="dom-if" if="[[canUpVote]]">
+            <paper-icon-button
+              class='upvote-comment'
+              icon$="[[_classBinding(upVoted, 'icons:star', 'icons:star-border')]]"
+              on-tap="toggleUpVote">
+            </paper-icon-button>
+          </template>
           <template is="dom-if" if="[[canEdit]]">
-            <span> <paper-icon-button icon='create' class="edit-icon" on-tap="openEditOverlay"></paper-icon-button> </span>
+            <span>
+              <paper-icon-button
+                icon='create'
+                class="edit-icon"
+                on-tap="openEditOverlay">
+              </paper-icon-button>
+            </span>
           </template>
           <template is="dom-if" if="[[canFlag]]">
-            <span> <paper-icon-button icon='flag' class$="[[_classBinding(flagged, 'flagged')]]" id="flagIcon" on-tap="toggleFlag"></paper-icon-button> </span>
+            <span>
+              <paper-icon-button
+                icon='flag'
+                class$="[[_classBinding(flagged, 'flagged')]]"
+                id="flagIcon"
+                on-tap="toggleFlag">
+              </paper-icon-button>
+            </span>
           </template>
           <paper-icon-button class="heading"
             aria-expanded$="[[commentBodyOpen]]"
@@ -160,17 +180,33 @@
           value: false,
           computed: '_canFlag(userId, comment)'
         },
+        canUpVote: {
+          type: Boolean,
+          value: false,
+          computed: '_canUpVote(userId, comment)'
+        },
         flagged: {
           type: Boolean,
           value: false,
           computed: '_flagged(lastUpdated)'
         },
+        upVoted: {
+          type: Boolean,
+          value: false,
+          computed: '_upVoted(lastUpdated)'
+        },
         commentAuthor: {
           type: String,
           value: '',
           computed: '_commentAuthor(lastUpdated)'
+        },
+        avatarUrl: {
+          type: String,
+          value: '',
+          computed: '_avatarUrl(commentAuthor)'
         }
       },
+
       attached() {
         this.comment.children.addListener(this, 'dataChildren')
       },
@@ -179,13 +215,30 @@
         this.comment.children.removeListener(this, 'dataChildren')
       },
 
+      _avatarUrl(user_id) {
+        return user_id ? client.getUser(user_id).avatarUrl : ''
+      },
+
       _commentAuthor() {
         return this.comment.user_id || this.comment.sender
+      },
+
+      _upVoted() {
+        const vote = this.comment.voted[this.userId]
+        return !!(vote && vote.content.body.value === 1)
       },
 
       _flagged() {
         return this.comment.flagged[this.userId]
       },
+
+      toggleUpVote() {
+        // A downvote sends a -1, an Upvote a +1
+        // an un - UpVote or un-DownVote a 0
+        // Currently only UpVote(*Star*) supported
+        this.sendVoteComment(this.comment.event_id, this.upVoted ? 0 : 1)
+      },
+
 
       toggleFlag() {
         this.sendFlagComment(this.comment.event_id, !this.flagged).then((success) => {
@@ -214,36 +267,40 @@
         })
       },
 
-      _canEdit: function(userId, comment) {
+      _canEdit(userId, comment) {
         return userId && comment && (comment.user_id === userId)
       },
 
-      _canFlag: function(userId, _) {
+      _canUpVote(userId, _) {
         return userId
       },
 
-      canReply: function(userId) {
+      _canFlag(userId, _) {
         return userId
       },
 
-      openReplyOverlay: function() {
+      canReply(userId) {
+        return userId
+      },
+
+      openReplyOverlay() {
         this.$.reply.targetId = this.comment.event_id
         this.$.reply.action = 'm.comment'
         this.$.reply.open()
       },
 
-      openEditOverlay: function() {
+      openEditOverlay() {
         this.$.reply.targetId = this.comment.event_id
         this.$.reply.action = 'm.edit'
         this.$.reply.content = this.body.text
         this.$.reply.open()
       },
 
-      toggleCollapse: function(_) {
+      toggleCollapse(_) {
         this.commentBodyOpen = !this.commentBodyOpen
       },
 
-      postedAt: function(timestamp) {
+      postedAt(timestamp) {
         return moment(timestamp).fromNow()
       }
 

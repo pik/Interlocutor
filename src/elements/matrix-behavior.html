@@ -101,6 +101,7 @@
       event.votes = new Set()
       event.score = 1
       event.flagged = {}
+      event.voted = {}
       event.children = new NotifyArray()
       // In the future let's raise if a top-level comment doesn't supply
       // roomId, rather than defaulting.
@@ -119,7 +120,7 @@
       let target
       if (content.msgtype === 'm.comment') {
         target = event
-        this.addEvent(event)
+        return this.addEvent(event)
       } else {
         target = this.state[content.body.target_id]
         if (!target) {
@@ -127,8 +128,25 @@
         }
         switch (content.msgtype) {
           case 'm.vote':
-            if (target.votes.add(event)) {
+            const sender = event.user_id || event.sender
+            const previousVote = target.voted[sender]
+            const voteValue = content.body.value
+            // Ignore illegal voteValues
+            if ([-1, 0, 1].indexOf(voteValue) === -1) {
+              console.log(`Illegal Vote Value: ${voteValue}, ignoring...`)
+              return false
+            }
+            // Undo the vote modifier from the previousVote if
+            // there was one. Then apply the current vote.
+            // Set the current value of voted[<userId>] to the current vote event.
+            if (previousVote && target.votes.add(event)) {
+              target.votes.delete(previousVote)
+              target.score -= previousVote.content.body.value
               target.score += content.body.value
+              target.voted[sender] = event
+            } else if (target.votes.add(event)) {
+              target.score += content.body.value
+              target.voted[sender] = event
             }
             break
           case 'm.flag':
@@ -142,6 +160,7 @@
             break
       }
       this.lastUpdated = event.origin_server_ts
+      return true
       }
     },
 
@@ -180,36 +199,6 @@
     },
 
     /**
-     * Upvote a comment, can only be done once per user.
-     * @param {string} roomId
-     * @param {string} commentId
-     * @return {module:client.Promise} Resolves: TODO
-     * @return {module:http-api.MatrixError} Rejects: with an error response.
-     */
-    sendUpVoteComment (commentId) {
-      const content = {
-        msgtype: 'm.vote',
-        body: { target_id: commentId, info: 1 }
-      }
-      return this.sendMessage(this.roomId, content, this.txnId)
-    },
-
-    /**
-     * downVote a comment, can only be done once per user.
-     * @param {string} roomId
-     * @param {string} commentId
-     * @return {module:client.Promise} Resolves: TODO
-     * @return {module:http-api.MatrixError} Rejects: with an error response.
-     */
-    sendDownVoteComment (commentId) {
-      const content = {
-        msgtype: 'm.vote',
-        body: { target_id: commentId, info: -1 }
-      }
-      return this.sendMessage(roomId, content, txnId)
-    },
-
-    /**
      * Edit a comment, must have been a comment previously created by the same user.
      * @param {string} commentId
      * @param {string} text
@@ -225,14 +214,34 @@
     },
 
     /**
-     * Flag or Unflag a comment.
+     * Upvote or Downvote a comment, can only be done once per user.
+     * @param {string} commentId
+     * @param {number} value
+     * @return {module:client.Promise} Resolves: TODO
+     * @return {module:http-api.MatrixError} Rejects: with an error response.
+     */
+    sendVoteComment (commentId, value) {
+      if ([-1, 0, 1].indexOf(value) === -1) {
+        throw 'IllegalVote'
+      }
+      console.log('sendVoteComment', commentId, value)
+      const content = {
+        msgtype: 'm.vote',
+        body: { target_id: commentId, value: value }
+      }
+      return this.sendMessage(room.roomId, content, client.txnId)
+    },
+
+
+    /**
+     * Flag or Unflag a comment, only once per user.
      * @param {string} commentId
      * @param {boolean} value
      * @return {module:client.Promise} Resolves: TODO
      * @return {module:http-api.MatrixError} Rejects: with an error response.
      */
     sendFlagComment (commentId, value) {
-      console.log('sendFlagComment', commentId)
+      console.log('sendFlagComment', commentId, value)
       const content = {
         msgtype: 'm.flag',
         body: { target_id: commentId, value: value}

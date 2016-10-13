@@ -27,7 +27,6 @@
       this._splice = this.splice
       this._listeners = new Set()
       this.push = function() {
-        debugger
         this._push(...arguments)
         this.notifyListeners(this.length, arguments, [])
       }
