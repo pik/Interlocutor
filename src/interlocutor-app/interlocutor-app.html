@@ -2,6 +2,7 @@
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+
 <link rel="import" href="../elements/matrix-comment.html">
 <link rel="import" href="../elements/matrix-login.html">
 <link rel="import" href="../elements/matrix-settings.html">
@@ -21,7 +22,7 @@
       <paper-button on-tap="openLogin">Login</paper-button>
     </template>
     <paper-icon-button on-tap="openSettings" icon="settings"></paper-icon-button>
-    <matrix-settings id="settings" tabindex="-1" settings="{{settings}}" with-backdrop></matrix-settings>
+    <matrix-settings id="settings" client-ready="[[clientReady]]" user-id="[[userId]]" tabindex="-1" with-backdrop></matrix-settings>
     <matrix-login id="login" tabindex="-1" with-backdrop></matrix-login>
     <template is="dom-repeat" items="[[topLevelComments]]" as="comment">
       <matrix-comment id="[[comment.event_id]]" comment="[[comment]]" state="[[state]]" user-id="[[userId]]" last-updated="[[lastUpdated]]"></matrix-comment>
@@ -33,7 +34,9 @@
 
     is: 'interlocutor-app',
     behaviors: [
-      MatrixBehavior, PolyHelperBehavior
+      MatrixBehavior,
+      PolyHelperBehavior,
+      SharedStateBehavior
     ],
     listeners: {
       'settings-updated': '_touchLastUpdated'
@@ -76,20 +79,26 @@
       topLevelComments: {
         type: Array,
         value: function() { return [] },
-        computed: '_topLevelComments(dataTopLevelComments.splices)'
+        computed: '_topLevelComments(dataTopLevelComments.*, lastUpdated)'
       },
       user: {
         type: Object,
         value: function() { return {} }
       },
+
       userId: {
         type: String,
         value: null,
       },
+
       lastUpdated: {
         type: Number,
         value: null,
         notify: true
+      },
+      clientReady: {
+        type: Boolean,
+        value: false,
       }
     },
 
@@ -106,6 +115,7 @@
         this.state[this.roomId] = { children: [] }
         try {
           this.buildInitialRoomState().then((_) => {
+            this.clientReady = true
             client.on("Room.timeline", (matrixEvent, room, toStartOfTimeline) => {
               const event = matrixEvent.event
               console.log('received Room.timeline event', event.event_id, event.type, room.room_id)
@@ -124,7 +134,9 @@
     },
 
     _touchLastUpdated() {
+      console.log('_touchLastUpdated')
       this.lastUpdated += 0.1
+      this.notifyPath('lastUpdated')
     },
 
     _topLevelComments: function() {

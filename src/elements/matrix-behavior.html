@@ -18,57 +18,24 @@
     guest_can_join: true,
   }
 
-  const __matrixBehaviorInstances = new Set()
-  const __settings = {
+    window.settings = {
             flagKillThreshold: 1,
             voteCollapseThreshold: -1,
             filterOn: true,
             trustedIdentities: { '@pik:pik-test': {} }
           }
-  let __settingsChangedCounter = 0
+
   const MatrixBehavior = {
-
-    _settingsValueChanged(changes) {
-      for (let instance of __matrixBehaviorInstances) {
-        if (instance !== this) {
-          __settingsChangedCounter += 1
-          console.log('_settingsValueChanged', this, changes.path, changes.value, __settingsChangedCounter)
-          instance.set(changes.path, changes.value)
-        }
-      }
-    },
-
-    attached() {
-      __matrixBehaviorInstances.add(this)
-    },
-
-    dettached() {
-      __matrixBehaviorInstances.delete(this)
-    },
-
-    observers: [
-      '_settingsValueChanged(settings.*)'
-    ],
-    properties: {
-      settings: {
-        type: Object,
-        value() {
-          return __settings
-        },
-      },
-      client: {
-        type: Object,
-        value: null,
-      }
+    defaultSettings() {
+      return settings
     },
 
     permitted (comment) {
-      return true
       if (!settings.filterOn) return true
       const flagged = comment.flagged
       let flagCount = 0
       const identities = Object.keys(flagged).filter((identity) => {
-        return this.settings.trustedIdentities[identity]
+        return settings.trustedIdentities[identity]
       })
       for (let i=0; i < identities.length; i++) {
         if (flagged[identities[i]]) flagCount += 1
@@ -151,15 +118,26 @@
             break
           case 'm.flag':
             if (target.flags.add(event)) {
-              target.flagged[event.user_id || event.sender] = content.body.value
+              const sender = event.user_id || event.sender
+              const value = content.body.value
+              target.flagged[sender] = value
+              const element = document.getElementById(content.body.target_id)
+              if (element) {
+                // Use the exact key-value pair becaues there is no option to force Notify
+                // on the base value
+                element.notifyPath(`flagged.${sender}`, value)
+              }
             }
             break
           case 'm.edit':
             target.content.body.text = content.body.text
-            this.lastUpdated = event.origin_server_ts
-            break
+            const element = document.getElementById(content.body.target_id)
+            if (element) {
+              // Use pathEffector because NotifyPath has no force
+              element._pathEffector('comment', target)
+            }
       }
-      this.lastUpdated = event.origin_server_ts
+      // this.lastUpdated = event.origin_server_ts
       return true
       }
     },
@@ -248,5 +226,14 @@
       }
       return this.sendMessage(room.roomId, content, client.txnId)
     },
+
+    saveUserSettings(settings) {
+      console.log("saveUserSettings", settings)
+      return client.setRoomTag(room.roomId, 'settings', settings)
+    },
+
+    loadUserSettings() {
+      return client.getRoomTags(room.roomId)
+    }
   }
 </script>

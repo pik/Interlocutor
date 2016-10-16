@@ -2,8 +2,10 @@
 <link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../../bower_components/iron-overlay-behavior/iron-overlay-behavior.html">
+
 <link rel="import" href="../../bower_components/paper-slider/paper-slider.html">
 <link rel="import" href="./poly-helper-behavior.html">
+<link rel="import" href="./matrix-behavior.html">
 
 <dom-module id="matrix-settings">
   <template>
@@ -53,23 +55,39 @@
 
     is: 'matrix-settings',
     behaviors: [
+      MatrixBehavior,
       Polymer.IronOverlayBehavior,
-      PolyHelperBehavior
+      PolyHelperBehavior,
+      SharedStateBehavior
     ],
     observers: [
-      'settingsUpdated(config.*)'
+      'settingsUpdated(settings.*)',
+      'loadSettings(clientReady)'
     ],
     properties: {
+      loadedSettings: {
+        type: Object,
+        value: null
+      },
+      settings: {
+        type: Object,
+        value() { return this.defaultSettings() },
+        notify: true,
+      },
+
+      clientReady: {
+        type: Boolean,
+        value: false,
+      },
       trustedIdentities: {
         type: Array,
         value: function() {
           return []
         },
-        computed: '_trustedIdentities(settings.trustedIdentities)'
+        computed: '_objectKeys(settings.trustedIdentities)'
       },
-      settings: {
-        type: Object,
-        value: function() { return {} }
+      userId: {
+        type: String,
       },
       newIdentity: {
         type: String,
@@ -80,7 +98,7 @@
 
     identityInput(e) {
       if (e.keyCode == 13) {
-        this.config.trustedIdentities[this.newIdentity] = {}
+        this.settings.trustedIdentities[this.newIdentity] = {}
         this.newIdentity = ''
         this.notifyPath('settings.trustedIdentities')
       }
@@ -88,18 +106,36 @@
 
     removeIdentity(event) {
       var identity = event.currentTarget.value
-      delete this.config.trustedIdentities[identity]
-      this.notifyPath('settings.trustedIdentities')
+      delete this.trustedIdentities[identity]
+      this.notifyPath('settings.trustedIdentities.*')
+    },
+
+    settingsIsDirty() {
+      const loadedSettings = this.loadedSettings || this.defaultSettings()
+      const settings = this.settings
+      return true
     },
 
     settingsUpdated() {
-      console.log('settingsUpdated')
-      this.fire('settings-updated')
+      if (this.settingsIsDirty()) {
+        this.debounce('persistSettings', this.persistSettings.bind(this), 5000)
+        this.fire('settings-updated')
+      }
     },
 
-    _trustedIdentities(identities) {
-      console.log('_trustedIdentities')
-      return this.settings.trustedIdentities ? Object.keys(this.settings.trustedIdentities) : []
+    persistSettings() {
+      this.saveUserSettings(this.settings)
+    },
+
+    loadSettings(clientReady) {
+      if (!clientReady) return
+      this.loadUserSettings().then((result) => {
+        if (result.tags && result.tags.settings) {
+          this.set('loadedSettings', result.tags.settings)
+          window.settings = result.tags.settings
+          this.set('settings', result.tags.settings)
+        }
+      })
     },
 
     toggle(selector) {

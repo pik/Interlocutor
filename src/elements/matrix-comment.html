@@ -5,6 +5,8 @@
 <link rel="import" href="../../bower_components/iron-collapse/iron-collapse.html">
 <link rel="import" href="../../bower_components/iron-image/iron-image.html">
 
+<link rel="import" href="../../bower_components/shared-state-behavior/shared-state-behavior.html">
+
 <link rel="import" href="./matrix-reply.html">
 <link rel="import" href="./poly-helper-behavior.html">
 <link rel="import" href="./matrix-behavior.html">
@@ -21,8 +23,17 @@
         margin-left: 2em;
       }
       #commentBody {
-        margin-left: 2em;
-        background: #FFF4CD
+        margin-left: 1.6em;
+        margin-top: 0.4em;
+      }
+      #commentBodyText {
+        background: #FFF4CD;
+      }
+      #commentRowOne {
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: center;
       }
       .comment-posted-at {
         color: #939393
@@ -38,8 +49,10 @@
     </style>
     <div class='comment-row1-wrapper'>
       <div class='comment-body-wrapper collapse-comment'>
-        <div>
-          <iron-image src="[[avatarUrl]]" style="width:1.8em; height:1.8em" sizing="contain"></iron-image>
+        <div id="commentRowOne">
+          <template is="dom-if" if="[[commentBodyOpen]]">
+            <iron-image src="[[avatarUrl]]" style="width:1.8em; height:1.8em" sizing="contain"></iron-image>
+          </template>
           <span class='comment-author-name'>[[commentAuthor]]</span>
           <span class='comment-posted-at'>[[postedAt(comment.origin_server_ts)]]</span>
           <template is="dom-if" if="[[canUpVote]]">
@@ -62,7 +75,7 @@
             <span>
               <paper-icon-button
                 icon='flag'
-                class$="[[_classBinding(flagged, 'flagged')]]"
+                class$="[[_classBinding(isFlagged, 'flagged')]]"
                 id="flagIcon"
                 on-tap="toggleFlag">
               </paper-icon-button>
@@ -77,14 +90,15 @@
           </paper-icon-button>
         </div>
         <iron-collapse id="commentBodyCollapse" tabindex="0" opened="[[commentBodyOpen]]">
-          <span id='commentBody'>[[text]]</span>
+          <div id='commentBody'>
+            <span id='commentBodyText'>[[text]]</span>
+          </div>
         </iron-collapse>
-
       </div>
     </div>
     <iron-collapse id="commentRowTwo" tabindex="0" opened="[[commentBodyOpen]]">
       <div class='comment-row2-wrapper'>
-        <template is="dom-if" if="[[canReply(userId)]]">
+        <template is="dom-if" if="[[canReply(userId, comment)]]">
           <paper-button class='comment-reply' on-tap="openReplyOverlay">[reply]</paper-button>
         </template>
         <!-- <template is="dom-if" if="[[replyOpen]]"> -->
@@ -105,11 +119,17 @@
       is: 'matrix-comment',
       behaviors: [
         PolyHelperBehavior,
-        MatrixBehavior
+        MatrixBehavior,
+        SharedStateBehavior
       ],
       listeners: {
         'cancel': 'toggleReply',
+        'flags-updated': '_recomputeChildrenFromEvent',
       },
+      observers: [
+        '_onFlagged(flagged.*)',
+        // '_recomputeChildren(lastUpdated)'
+      ],
       properties: {
         state: {
           type: Object,
@@ -130,7 +150,7 @@
         children: {
           type: Array,
           value: function() { return [] },
-          computed: '_children(dataChildren.splices)',
+          computed: '_children(dataChildren.*, lastUpdated)',
         },
 
         childrenCount: {
@@ -146,7 +166,7 @@
         text: {
           type: String,
           value: '',
-          computed: '_text(lastUpdated)'
+          computed: '_text(comment, body)'
         },
         commentBodyOpen: {
           type: Boolean,
@@ -186,9 +206,13 @@
           computed: '_canUpVote(userId, comment)'
         },
         flagged: {
+          type: Object,
+          computed: '_alias(comment.flagged)'
+        },
+        isFlagged: {
           type: Boolean,
           value: false,
-          computed: '_flagged(lastUpdated)'
+          computed: '_isFlagged(flagged.*)'
         },
         upVoted: {
           type: Boolean,
@@ -209,10 +233,28 @@
 
       attached() {
         this.comment.children.addListener(this, 'dataChildren')
+        this.notifyPath('flagged.*', this.flagged)
       },
 
       dettached() {
         this.comment.children.removeListener(this, 'dataChildren')
+      },
+
+      _recomputeChildren(_) {
+        this._pathEffector('dataChildren.*', this.dataChildren)
+      },
+
+      _recomputeChildrenFromEvent(event, source) {
+        // Because fire goes to back to itself by default...
+        if (source !== this) {
+          event.preventDefault()
+          // Because Polymer has no hard recompute
+          this._pathEffector('dataChildren.*', this.dataChildren)
+        }
+      },
+
+      _onFlagged() {
+        this.fire('flags-updated', this, { cancelable: true })
       },
 
       _avatarUrl(user_id) {
@@ -228,8 +270,8 @@
         return !!(vote && vote.content.body.value === 1)
       },
 
-      _flagged() {
-        return this.comment.flagged[this.userId]
+      _isFlagged(_) {
+        return this.flagged[this.userId]
       },
 
       toggleUpVote() {
@@ -241,7 +283,7 @@
 
 
       toggleFlag() {
-        this.sendFlagComment(this.comment.event_id, !this.flagged).then((success) => {
+        this.sendFlagComment(this.comment.event_id, !this.isFlagged).then((success) => {
         }, (error) => {
           console.log(error)
           // this.flagged = !this.flagged
@@ -262,6 +304,7 @@
       // },
 
       _children(_) {
+        console.log('filtering _children', this.id)
         return this.dataChildren.filter((comment) => {
           return comment.content.msgtype === 'm.comment' && this.permitted(comment)
         })
@@ -271,16 +314,16 @@
         return userId && comment && (comment.user_id === userId)
       },
 
-      _canUpVote(userId, _) {
-        return userId
+      _canUpVote(userId, comment) {
+        return userId // && comment && (comment.user_id !== userId)
       },
 
-      _canFlag(userId, _) {
-        return userId
+      _canFlag(userId, comment) {
+        return userId // && comment && (comment.user_id !== userId)
       },
 
-      canReply(userId) {
-        return userId
+      canReply(userId, comment) {
+        return userId // && comment && (comment.user_id !== userId)
       },
 
       openReplyOverlay() {
