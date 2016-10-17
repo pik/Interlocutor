@@ -36,7 +36,7 @@
         align-items: center;
       }
       .comment-posted-at {
-        color: #939393
+        color: #939393;
       }
       .edit-icon {
         height: 2em;
@@ -54,7 +54,7 @@
             <iron-image src="[[avatarUrl]]" style="width:1.8em; height:1.8em" sizing="contain"></iron-image>
           </template>
           <span class='comment-author-name'>[[commentAuthor]]</span>
-          <span class='comment-posted-at'>[[postedAt(comment.origin_server_ts)]]</span>
+          <span class='comment-posted-at'>&nbsp[[postedAt(comment.origin_server_ts)]]</span>
           <template is="dom-if" if="[[canUpVote]]">
             <paper-icon-button
               class='upvote-comment'

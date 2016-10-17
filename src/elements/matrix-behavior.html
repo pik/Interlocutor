@@ -164,7 +164,7 @@
     },
 
     processEvent (event) {
-      // console.log('Processing event', event.user_id || event.sender, event.event_id, event.content.msgtype, event.content.body)
+      console.log('Processing event', event.user_id || event.sender, event.event_id, event.content.msgtype, event.content.body)
       if (event.type !== 'm.room.comment') return false
       const content = event.content
       let target
@@ -176,6 +176,8 @@
         if (!target) {
           return console.log('illegal event', event)
         }
+        // switch() isn't closured by default
+        let element
         switch (content.msgtype) {
           case 'm.vote':
             const sender = event.user_id || event.sender
@@ -190,13 +192,16 @@
             // there was one. Then apply the current vote.
             // Set the current value of voted[<userId>] to the current vote event.
             if (previousVote && target.votes.add(event)) {
-              target.votes.delete(previousVote)
               target.score -= previousVote.content.body.value
-              target.score += content.body.value
+              target.score += voteValue
               target.voted[sender] = event
             } else if (target.votes.add(event)) {
-              target.score += content.body.value
+              target.score += voteValue
               target.voted[sender] = event
+            }
+            element = document.getElementById(content.body.target_id)
+            if (element) {
+              element.notifyPath(`voted.${sender}`, voteValue)
             }
             break
           case 'm.flag':
@@ -204,7 +209,7 @@
               const sender = event.user_id || event.sender
               const value = content.body.value
               target.flagged[sender] = value
-              const element = document.getElementById(content.body.target_id)
+              element = document.getElementById(content.body.target_id)
               if (element) {
                 // Use the exact key-value pair becaues there is no option to force Notify
                 // on the base value
@@ -214,7 +219,7 @@
             break
           case 'm.edit':
             target.content.body.text = content.body.text
-            const element = document.getElementById(content.body.target_id)
+            element = document.getElementById(content.body.target_id)
             if (element) {
               // Use pathEffector because NotifyPath has no force
               element._pathEffector('comment', target)
