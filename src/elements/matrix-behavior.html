@@ -1,4 +1,86 @@
 <script type="text/javascript">
+  const deepCopy = function(obj) {
+    return JSON.parse(JSON.stringify(obj))
+  }
+
+  const deepCompare = function(x, y) {
+      // Inspired by
+      // http://stackoverflow.com/questions/1068834/object-comparison-in-javascript#1144249
+
+      // Compare primitives and functions.
+      // Also check if both arguments link to the same object.
+      if (x === y) {
+          return true;
+      }
+
+      if (typeof x !== typeof y) {
+          return false;
+      }
+
+      // special-case NaN (since NaN !== NaN)
+      if (typeof x === 'number' && isNaN(x) && isNaN(y)) {
+           return true;
+      }
+
+      // special-case null (since typeof null == 'object', but null.constructor
+      // throws)
+      if (x === null || y === null) {
+          return x === y;
+      }
+
+      // everything else is either an unequal primitive, or an object
+      if (!(x instanceof Object)) {
+          return false;
+      }
+
+      // check they are the same type of object
+      if (x.constructor !== y.constructor || x.prototype !== y.prototype) {
+          return false;
+      }
+
+      // special-casing for some special types of object
+      if (x instanceof RegExp || x instanceof Date) {
+          return x.toString() === y.toString();
+      }
+
+      // the object algorithm works for Array, but it's sub-optimal.
+      if (x instanceof Array) {
+          if (x.length !== y.length) {
+              return false;
+          }
+
+          for (var i = 0; i < x.length; i++) {
+              if (!deepCompare(x[i], y[i])) {
+                  return false;
+              }
+          }
+      } else {
+          // disable jshint "The body of a for in should be wrapped in an if
+          // statement"
+          /* jshint -W089 */
+
+          // check that all of y's direct keys are in x
+          var p;
+          for (p in y) {
+              if (y.hasOwnProperty(p) !== x.hasOwnProperty(p)) {
+                  return false;
+              }
+          }
+
+          // finally, compare each of x's keys with y
+          for (p in y) {
+              if (y.hasOwnProperty(p) !== x.hasOwnProperty(p)) {
+                  return false;
+              }
+              if (!deepCompare(x[p], y[p])) {
+                  return false;
+              }
+          }
+      }
+      /* jshint +W089 */
+      return true;
+  };
+
   const exampleRoom = {
     // A public visibility indicates that the room will be shown in the published room list.
     // A private visibility will hide the room from the published room list.
@@ -18,7 +100,7 @@
     guest_can_join: true,
   }
 
-    window.settings = {
+    const __defaultSettings = {
             flagKillThreshold: 1,
             voteCollapseThreshold: -1,
             filterOn: true,
@@ -26,11 +108,12 @@
           }
 
   const MatrixBehavior = {
-    defaultSettings() {
-      return settings
+    _defaultSettings() {
+      return deepCopy(__defaultSettings)
     },
 
     permitted (comment) {
+      const settings = document.getElementById('settings').settings
       if (!settings.filterOn) return true
       const flagged = comment.flagged
       let flagCount = 0
@@ -81,7 +164,7 @@
     },
 
     processEvent (event) {
-      console.log('Processing event', event.user_id || event.sender, event.event_id, event.content.msgtype, event.content.body)
+      // console.log('Processing event', event.user_id || event.sender, event.event_id, event.content.msgtype, event.content.body)
       if (event.type !== 'm.room.comment') return false
       const content = event.content
       let target

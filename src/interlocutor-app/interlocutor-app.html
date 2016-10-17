@@ -22,7 +22,7 @@
       <paper-button on-tap="openLogin">Login</paper-button>
     </template>
     <paper-icon-button on-tap="openSettings" icon="settings"></paper-icon-button>
-    <matrix-settings id="settings" client-ready="[[clientReady]]" user-id="[[userId]]" tabindex="-1" with-backdrop></matrix-settings>
+    <matrix-settings id="settings" client-ready="[[clientReady]]" user-id="[[userId]]" default-settings="[[defaultSettings]]" tabindex="-1" with-backdrop></matrix-settings>
     <matrix-login id="login" tabindex="-1" with-backdrop></matrix-login>
     <template is="dom-repeat" items="[[topLevelComments]]" as="comment">
       <matrix-comment id="[[comment.event_id]]" comment="[[comment]]" state="[[state]]" user-id="[[userId]]" last-updated="[[lastUpdated]]"></matrix-comment>
@@ -42,6 +42,12 @@
       'settings-updated': '_touchLastUpdated'
     },
     properties: {
+      // Default Settings are declared here so as to faciliate passing
+      // a custom defaultSettings object
+      defaultSettings: {
+        type: Object,
+        value() { return this._defaultSettings() }
+      },
       homeServerAddress: {
         type: String,
       },

@@ -212,7 +212,7 @@
         isFlagged: {
           type: Boolean,
           value: false,
-          computed: '_isFlagged(flagged.*)'
+          computed: '_isFlagged(flagged.*, userId)'
         },
         upVoted: {
           type: Boolean,
@@ -233,7 +233,6 @@
 
       attached() {
         this.comment.children.addListener(this, 'dataChildren')
-        this.notifyPath('flagged.*', this.flagged)
       },
 
       dettached() {

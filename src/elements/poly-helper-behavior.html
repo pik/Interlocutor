@@ -24,7 +24,7 @@ var PolyHelperBehavior = {
     if (defaultVal == undefined || defaultVal === '{}') defaultVal = {}
     else if (defaultVal === '[]') defaultVal = []
 
-    if (target) {
+    if (target !== undefined) {
       return target
     }
     return defaultVal
