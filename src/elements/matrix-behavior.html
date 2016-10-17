@@ -104,7 +104,8 @@
             flagKillThreshold: 1,
             voteCollapseThreshold: -1,
             filterOn: true,
-            trustedIdentities: { '@pik:pik-test': {} }
+            trustedIdentities: { '@pik:pik-test': {} },
+            anyoneCanFlag: true
           }
 
   const MatrixBehavior = {
@@ -117,14 +118,29 @@
       if (!settings.filterOn) return true
       const flagged = comment.flagged
       let flagCount = 0
-      const identities = Object.keys(flagged).filter((identity) => {
-        return settings.trustedIdentities[identity]
-      })
-      for (let i=0; i < identities.length; i++) {
-        if (flagged[identities[i]]) flagCount += 1
+      if (settings.anyoneCanFlag) { // All users can flag, moderators instaGib
+        const trustedIdentities = settings.trustedIdentities
+        let instaGib = false
+        for (let userName in flagged) {
+          if (flagged[userName]) {
+            if (trustedIdentities[userName]) {
+              instaGib = true
+              break
+            }
+            flagCount += 1
+          }
+        }
+        return (instagib || flagCount < settings.flagKillThreshold)
+      } else { // Only moderators can flag
+        const identities = Object.keys(flagged).filter((identity) => {
+          return settings.trustedIdentities[identity]
+        })
+        for (let i=0; i < identities.length; i++) {
+          if (flagged[identities[i]]) flagCount += 1
+        }
+        console.log('permitted', flagCount, settings.flagKillThreshold)
+        return (flagCount < settings.flagKillThreshold)
       }
-      console.log('permitted', flagCount, settings.flagKillThreshold)
-      return (flagCount < settings.flagKillThreshold)
     },
 
     login(username, password) {
