@@ -16,12 +16,12 @@ var PolyHelperBehavior = {
     }
   },
 
-  _count(_, arr) {
-    return arr ? arr.length : 0
+  _count(changes) {
+    return changes.base ? changes.base.length : 0
   },
 
   _alias(target, defaultVal) {
-    if (defaultVal == undefined || defaultVal === '{}') defaultVal = {}
+    if (defaultVal === '{}') defaultVal = {}
     else if (defaultVal === '[]') defaultVal = []
 
     if (target !== undefined) {

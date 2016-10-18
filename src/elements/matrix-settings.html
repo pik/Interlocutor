@@ -185,6 +185,7 @@
         if (result.tags && result.tags.settings) {
           console.log('loading User Settings..')
           window.settings = result.tags.settings
+          // TODO merge update into defaults
           this.set('customSettings', result.tags.settings)
           this.set('activeSettingsProfile', 'customSettings')
           this.set('settings', settings)

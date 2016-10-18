@@ -57,7 +57,7 @@
             <iron-image src="[[avatarUrl]]" style="width:1.8em; height:1.8em" sizing="contain"></iron-image>
           </template>
           <span class='comment-author-name'>[[commentAuthor]]</span>
-          <span class='comment-posted-at'>&nbsp[[postedAt(comment.origin_server_ts)]]</span>
+          <span class='comment-posted-at'>&nbsp[[postedAt(comment.origin_server_ts, editedTimestamp)]]</span>
           <template is="dom-if" if="[[canUpVote]]">
             <paper-icon-button
               class='upvote-comment'
@@ -84,13 +84,16 @@
               </paper-icon-button>
             </span>
           </template>
+          <!-- First Alternative -->
           <paper-icon-button class="heading"
             aria-expanded$="[[commentBodyOpen]]"
             aria-controls="commentBodyCollapse"
             on-tap="toggleCollapse"
             icon$="[[_classBinding(commentBodyOpen, 'expand-less', 'expand-more')]]">
-            -
           </paper-icon-button>
+          <template is="dom-if" if="[[!commentBodyOpen]]">
+            <span>[[childrenCount]]</span>
+          </template>
         </div>
         <iron-collapse id="commentBodyCollapse" tabindex="0" opened="[[commentBodyOpen]]">
           <div id='commentBody'>
@@ -147,7 +150,7 @@
         dataChildren: {
           type: Array,
           value: function() { return [] },
-          computed: '_alias(comment.children)'
+          computed: "_alias(comment.children, '[]')"
         },
 
         children: {
@@ -159,17 +162,17 @@
         childrenCount: {
           type: Number,
           value: 0,
-          computed: '_count(children.splices, children)'
+          computed: '_childrenCount(children.*)'
         },
         body: {
           type: Object,
           value: function() { return {} },
-          computed: '_alias(comment.content.body)'
+          computed: "_alias(comment.content.body, '{}')"
         },
         text: {
           type: String,
           value: '',
-          computed: '_text(comment, body)'
+          computed: "_alias(body.text, '')"
         },
         commentBodyOpen: {
           type: Boolean,
@@ -210,7 +213,11 @@
         },
         flagged: {
           type: Object,
-          computed: '_alias(comment.flagged)'
+          computed: "_alias(comment.flagged, '{}')"
+        },
+        voted: {
+          type: Object,
+          computed: "_alias(comment.voted, '{}')"
         },
         isFlagged: {
           type: Boolean,
@@ -220,7 +227,7 @@
         upVoted: {
           type: Boolean,
           value: false,
-          computed: '_upVoted(lastUpdated)'
+          computed: '_upVoted(voted.*, userId)'
         },
         commentAuthor: {
           type: String,
@@ -231,7 +238,22 @@
           type: String,
           value: '',
           computed: '_avatarUrl(commentAuthor)'
+        },
+        editedTimestamp: {
+          type: Number,
+          value: null,
+          computed: '_alias(comment.editedTimestamp)'
         }
+      },
+
+      _childrenCount(changes) {
+        // Includes itself (1)
+        const _count = changes.base.reduce((prev, cur) => {
+          // return 0 for childrenCount the children have not computed yet
+          return prev + (cur.childrenCount || 0)
+        }, 1)
+        this.comment.childrenCount = _count
+        return _count
       },
 
       attached() {
@@ -313,19 +335,23 @@
       },
 
       _canEdit(userId, comment) {
-        return userId && comment && (comment.user_id === userId)
+        return userId && comment && settings && settings.editWindow !== -1 &&
+          (comment.user_id === userId) &&
+          (settings.editWindow + comment.origin_server_ts < new Date().getTime())
+
       },
 
+      // FIX ME
       _canUpVote(userId, comment) {
-        return userId // && comment && (comment.user_id !== userId)
+        return userId && comment //&& (comment.user_id !== userId)
       },
 
       _canFlag(userId, comment) {
-        return userId // && comment && (comment.user_id !== userId)
+        return userId && comment //&& (comment.user_id !== userId)
       },
 
       canReply(userId, comment) {
-        return userId // && comment && (comment.user_id !== userId)
+        return userId && comment //&& (comment.user_id !== userId)
       },
 
       openReplyOverlay() {
@@ -345,8 +371,8 @@
         this.commentBodyOpen = !this.commentBodyOpen
       },
 
-      postedAt(timestamp) {
-        return moment(timestamp).fromNow()
+      postedAt(timestamp, editedTimestamp) {
+        return editedTimestamp ? `Edited ${moment(editedTimestamp).fromNow()}`: moment(timestamp).fromNow()
       }
 
     });

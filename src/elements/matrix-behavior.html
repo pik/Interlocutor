@@ -105,7 +105,9 @@
             voteCollapseThreshold: -1,
             filterOn: true,
             trustedIdentities: { '@pik:pik-test': {} },
-            anyoneCanFlag: true
+            flagsEnabled: true, // TODO
+            upvotesEnabled: true, // TODO
+            editWindow: 1000*60*24*7, // Set to -1 to disable edit completely
           }
 
   const MatrixBehavior = {
@@ -118,29 +120,18 @@
       if (!settings.filterOn) return true
       const flagged = comment.flagged
       let flagCount = 0
-      if (settings.anyoneCanFlag) { // All users can flag, moderators instaGib
-        const trustedIdentities = settings.trustedIdentities
-        let instaGib = false
-        for (let userName in flagged) {
-          if (flagged[userName]) {
-            if (trustedIdentities[userName]) {
-              instaGib = true
-              break
-            }
-            flagCount += 1
+      const trustedIdentities = settings.trustedIdentities
+      let instaGib = false
+      for (let userName in flagged) {
+        if (flagged[userName]) {
+          if (trustedIdentities[userName]) {
+            instaGib = true
+            break
           }
+          flagCount += 1
         }
-        return (instagib || flagCount < settings.flagKillThreshold)
-      } else { // Only moderators can flag
-        const identities = Object.keys(flagged).filter((identity) => {
-          return settings.trustedIdentities[identity]
-        })
-        for (let i=0; i < identities.length; i++) {
-          if (flagged[identities[i]]) flagCount += 1
-        }
-        console.log('permitted', flagCount, settings.flagKillThreshold)
-        return (flagCount < settings.flagKillThreshold)
       }
+      return (!instaGib && flagCount < settings.flagKillThreshold)
     },
 
     login(username, password) {
@@ -235,10 +226,13 @@
             break
           case 'm.edit':
             target.content.body.text = content.body.text
+            // Setup editedTimestamp from the edit event
+            target.editedTimestamp = event.origin_server_ts
             element = document.getElementById(content.body.target_id)
             if (element) {
               // Use pathEffector because NotifyPath has no force
-              element._pathEffector('comment', target)
+              element._pathEffector('comment.content.body', content.body)
+              element.notifyPath('comment.editedTimestamp', target.editedTimestamp)
             }
       }
       // this.lastUpdated = event.origin_server_ts
@@ -311,7 +305,7 @@
         msgtype: 'm.vote',
         body: { target_id: commentId, value: value }
       }
-      return this.sendMessage(room.roomId, content, client.txnId)
+      return this.sendMessage(room.roomId, content, client.txnId+=1)
     },
 
 
@@ -328,7 +322,7 @@
         msgtype: 'm.flag',
         body: { target_id: commentId, value: value}
       }
-      return this.sendMessage(room.roomId, content, client.txnId)
+      return this.sendMessage(room.roomId, content, client.txnId+=1)
     },
 
     saveUserSettings(settings) {
