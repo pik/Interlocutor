@@ -45,6 +45,9 @@
       .flagged {
         color: red;
       }
+      paper-icon-button[icon="star"] {
+        color: #FFD600;
+      }
 
     </style>
     <div class='comment-row1-wrapper'>
@@ -58,7 +61,7 @@
           <template is="dom-if" if="[[canUpVote]]">
             <paper-icon-button
               class='upvote-comment'
-              icon$="[[_classBinding(upVoted, 'icons:star', 'icons:star-border')]]"
+              icon$="[[_classBinding(upVoted, 'star', 'star-border')]]"
               on-tap="toggleUpVote">
             </paper-icon-button>
           </template>
