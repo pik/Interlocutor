@@ -33,16 +33,29 @@
       MatrixBehavior
     ],
     properties: {
+      userId: {
+        type: String,
+        notify: true
+      }
     },
     attached() {
       MatrixBehavior.foo = 5
     },
 
     login() {
-      MatrixBehavior.login(this.$.username.value, this.$.password.value).then((success) => {
-        this.$.username.value = this.$.password.value = ''
-        this.close()
-      })
+      MatrixBehavior.login(this.$.username.value, this.$.password.value)
+        .then((result) => {
+          this.$.username.value = this.$.password.value = ''
+          this.userId = result.user_id
+          this.close()
+        }, (err) => {
+          if (err.httpStatus) {
+            this.$.password.value = ''
+            this.fire('notify', 'Incorrect Login Credentials')
+          } else {
+            this.fire('notify', 'Something went wrong, please try again.')
+          }
+        })
     },
 
     toggle: function(selector) {

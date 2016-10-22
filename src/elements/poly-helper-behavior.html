@@ -30,9 +30,8 @@ var PolyHelperBehavior = {
     return defaultVal
   },
 
-  _objectKeys(obj) {
-    console.log('_objectKeys', obj)
-    return obj ? Object.keys(obj) : []
+  _objectKeys(changes) {
+    return changes && changes.base ? Object.keys(changes.base) : []
   }
 
 }

@@ -7,7 +7,9 @@
     "iron-overlay-behavior": "^1.8.6",
     "paper-button": "^1.0.13",
     "iron-collapse": "^1.2.1",
-    "moment": "^2.14.1"
+    "moment": "^2.14.1",
+    "paper-dialog": "^1.1.0",
+    "paper-toast": "git@github.com:pik/paper-toast.git#vertical-align-transition"
   },
   "devDependencies": {
     "iron-component-page": "PolymerElements/iron-component-page#^1.0.0",

@@ -3,6 +3,11 @@
 <link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
 
+<link rel="import" href="../../bower_components/paper-toast/paper-toast.html">
+
+<link rel="import" href="../../bower_components/paper-spinner/paper-spinner-lite.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+
 <link rel="import" href="../elements/matrix-comment.html">
 <link rel="import" href="../elements/matrix-login.html">
 <link rel="import" href="../elements/matrix-settings.html">
@@ -12,21 +17,45 @@
   <template>
     <style>
       :host {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
       }
+
+      paper-toast {
+
+      }
+
+
     </style>
-    <template is="dom-if" if="[[userId]]">
-        <span>[[userId]]</span>
-        <paper-button on-tap="logout">Logout</paper-button>
+    <template is="dom-if" if="[[!clientReady]]">
+      <span>
+        Comments are loading
+        <paper-spinner-lite active></paper-spinner-lite>
+      </span>
     </template>
-    <template is="dom-if" if="[[!userId]]">
-      <paper-button on-tap="openLogin">Login</paper-button>
-    </template>
-    <paper-icon-button on-tap="openSettings" icon="settings"></paper-icon-button>
-    <matrix-settings id="settings" client-ready="[[clientReady]]" user-id="[[userId]]" default-settings="[[defaultSettings]]" tabindex="-1" with-backdrop></matrix-settings>
-    <matrix-login id="login" tabindex="-1" with-backdrop></matrix-login>
-    <template is="dom-repeat" items="[[topLevelComments]]" as="comment">
-      <matrix-comment id="[[comment.event_id]]" comment="[[comment]]" state="[[state]]" user-id="[[userId]]" last-updated="[[lastUpdated]]"></matrix-comment>
-    </template>
+    <div class='user-section' hidden="[[!clientReady]]">
+      <template is="dom-if" if="[[userId]]">
+          <span>[[userId]]</span>
+          <paper-button on-tap="logout">Logout</paper-button>
+      </template>
+      <template is="dom-if" if="[[!userId]]">
+        <paper-button on-tap="openLogin">Login</paper-button>
+      </template>
+      <paper-icon-button on-tap="openSettings" icon="settings"></paper-icon-button>
+      <matrix-settings id="settings" client-ready="[[clientReady]]" user-id="[[userId]]" default-settings="[[defaultSettings]]" tabindex="-1" with-backdrop></matrix-settings>
+      <matrix-login id="login" tabindex="-1" with-backdrop user-id="{{userId}}"></matrix-login>
+    </div>
+    <paper-toast id="toast" text="" vertical-align="top"></paper-toast>
+    <div class='comment-section' hidden="[[!clientReady]]">
+      <template is="dom-if" if="[[_canReply(userId, roomId)]]">
+        <paper-button on-tap="openReplyOverlay">Add Comment</paper-button>
+      </template>
+      <template is="dom-repeat" items="[[topLevelComments]]" as="comment">
+        <matrix-comment id="[[comment.event_id]]" comment="[[comment]]" state="[[state]]" user-id="[[userId]]" last-updated="[[lastUpdated]]"></matrix-comment>
+      </template>
+      <matrix-reply id="reply" tab tabindex="-1" with-backdrop></matrix-reply>
+    </div>
   </template>
 
 <script>
@@ -39,6 +68,7 @@
       SharedStateBehavior
     ],
     listeners: {
+      'notify': 'notify',
       'settings-updated': '_touchLastUpdated'
     },
     properties: {
@@ -120,7 +150,7 @@
         window.room = this.room = client.getRoom(this.roomId)
         this.state[this.roomId] = { children: [] }
         try {
-          this.buildInitialRoomState().then((_) => {
+          this.buildInitialRoomState(this.roomId).then((_) => {
             this.clientReady = true
             client.on("Room.timeline", (matrixEvent, room, toStartOfTimeline) => {
               const event = matrixEvent.event
@@ -137,6 +167,10 @@
           console.log(e)
         }
       }, 1000)
+    },
+
+    _hasComments(dataTopLevelComments, clientReady) {
+      return dataTopLevelComments && dataTopLevelComments.length || !clientReady
     },
 
     _touchLastUpdated() {
@@ -176,6 +210,20 @@
       this.$.settings.open()
     },
 
+    notify(event) {
+      this.$.toast.text = event.detail
+      this.$.toast.open()
+    },
+
+    openReplyOverlay() {
+      this.$.reply.targetId = this.roomId
+      this.$.reply.action = 'm.comment'
+      this.$.reply.open()
+    },
+
+    _canReply(userId, roomId) {
+      return userId && roomId
+    }
   });
 </script>
 </dom-module>

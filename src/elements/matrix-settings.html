@@ -118,7 +118,7 @@
         value: function() {
           return []
         },
-        computed: '_objectKeys(settings.trustedIdentities)'
+        computed: '_objectKeys(settings.trustedIdentities.*)'
       },
       userId: {
         type: String,
@@ -149,16 +149,15 @@
 
     identityInput(e) {
       if (e.keyCode == 13) {
-        this.settings.trustedIdentities[this.newIdentity] = {}
+        this.set('settings.trustedIdentities.' + this.newIdentity, {})
         this.newIdentity = ''
-        this.notifyPath('settings.trustedIdentities')
       }
     },
 
     removeIdentity(event) {
-      var identity = event.currentTarget.value
-      delete this.trustedIdentities[identity]
-      this.notifyPath('settings.trustedIdentities.*')
+      const identity = event.currentTarget.value
+      delete this.settings.trustedIdentities[identity]
+      this._pathEffector('settings.trustedIdentities.' + identity)
     },
 
     settingsIsDirty() {

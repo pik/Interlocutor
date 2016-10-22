@@ -54,7 +54,7 @@
       <div class='comment-body-wrapper collapse-comment'>
         <div id="commentRowOne">
           <template is="dom-if" if="[[commentBodyOpen]]">
-            <iron-image src="[[avatarUrl]]" style="width:1.8em; height:1.8em" sizing="contain"></iron-image>
+            <iron-image src="[[avatarUrl]]" style="width:1.8em; height:1.8em" sizing="contain" preload fade></iron-image>
           </template>
           <span class='comment-author-name'>[[commentAuthor]]</span>
           <span class='comment-posted-at'>&nbsp[[postedAt(comment.origin_server_ts, editedTimestamp)]]</span>
@@ -105,7 +105,7 @@
     <iron-collapse id="commentRowTwo" tabindex="0" opened="[[commentBodyOpen]]">
       <div class='comment-row2-wrapper'>
         <template is="dom-if" if="[[canReply(userId, comment)]]">
-          <paper-button class='comment-reply' on-tap="openReplyOverlay">[reply]</paper-button>
+          <paper-button class='comment-reply' on-tap="openReplyOverlay">reply</paper-button>
         </template>
         <!-- <template is="dom-if" if="[[replyOpen]]"> -->
         <!-- </template> -->
@@ -281,8 +281,8 @@
         this.fire('flags-updated', this, { cancelable: true })
       },
 
-      _avatarUrl(user_id) {
-        return user_id ? client.getUser(user_id).avatarUrl : ''
+      _avatarUrl(author_id) {
+        return author_id ? client.getUser(author_id).avatarUrl : ''
       },
 
       _commentAuthor() {
