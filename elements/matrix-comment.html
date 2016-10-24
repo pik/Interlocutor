@@ -1,11 +1,8 @@
-
-<link rel="import" href="../../bower_components/polymer/polymer.html">
-<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
-<link rel="import" href="../../bower_components/paper-button/paper-button.html">
-<link rel="import" href="../../bower_components/iron-collapse/iron-collapse.html">
-<link rel="import" href="../../bower_components/iron-image/iron-image.html">
-
-<link rel="import" href="../../bower_components/shared-state-behavior/shared-state-behavior.html">
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/iron-collapse/iron-collapse.html">
+<link rel="import" href="../bower_components/iron-image/iron-image.html">
 
 <link rel="import" href="./matrix-reply.html">
 <link rel="import" href="./poly-helper-behavior.html">
@@ -322,7 +319,7 @@
 
 
       toggleFlag() {
-        this.sendFlagComment(this.comment.event_id, !this.isFlagged).then((success) => {
+        this.sendFlagComment(this.comment.event_id, !this.isFlagged).then((_ret) => {
         }, (error) => {
           console.log(error)
           // this.flagged = !this.flagged
@@ -350,15 +347,15 @@
 
       // FIX ME
       _canUpVote(userId, comment) {
-        return userId && comment //&& (comment.user_id !== userId)
+        return userId && comment // && (comment.user_id !== userId)
       },
 
       _canFlag(userId, comment) {
-        return userId && comment //&& (comment.user_id !== userId)
+        return userId && comment // && (comment.user_id !== userId)
       },
 
       canReply(userId, comment) {
-        return userId && comment //&& (comment.user_id !== userId)
+        return userId && comment // && (comment.user_id !== userId)
       },
 
       openReplyOverlay() {

@@ -1,0 +1,94 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-input/paper-textarea.html">
+<link rel="import" href="../bower_components/iron-collapse/iron-collapse.html">
+<link rel="import" href="../bower_components/iron-overlay-behavior/iron-overlay-behavior.html">
+
+<link rel="import" href="./matrix-behavior.html">
+
+<dom-module id="matrix-reply">
+  <template>
+    <style>
+      :host {
+        background: white;
+        color: black;
+        padding: 5em;
+        box-shadow: rgba(0, 0, 0, 0.24) -2px 5px 12px 0px, rgba(0, 0, 0, 0.12) 0px 0px 12px 0px;
+        display: flex;
+        flex-direction: column;
+        min-height: 10em;
+        min-width: 30em;
+      }
+      paper-input {
+        --paper-input-container-disabled: {
+          opacity: 0.66;
+        };
+      }
+      #comment-content-posting {
+        min-height: 4em;
+      }
+    </style>
+    <div class='reply-body-wrapper'>
+      <paper-textarea id="replyBody" label="" value={{content}}></paper-textarea>
+    </div>
+    <div class='reply-row2-wrapper'>
+      <template is="dom-if" if="[[!posting]]">
+        <paper-button class='reply-cancel' on-tap="close">[cancel]</paper-button>
+        <paper-button class='reply-post' on-tap="post">[post]</paper-button>
+      </template>
+      <template is="dom-if" is="[[posting]]">
+
+      </template>
+      <br/>
+    </div>
+  </template>
+
+<script>
+  Polymer({
+
+    is: 'matrix-reply',
+    behaviors: [
+      MatrixBehavior,
+      Polymer.IronOverlayBehavior
+    ],
+    properties: {
+      content: {
+        type: String,
+        value: '',
+      },
+      targetId: {
+        type: String,
+        value: '',
+        notify: true,
+      },
+      posting: {
+        type: Boolean,
+        value: false
+      },
+    },
+
+    post: function() {
+      this.$.replyBody.disabled = true
+      this.posting = true
+      const action = this.action === 'm.edit' ? this.sendEditComment.bind(this): this.sendCreateComment.bind(this)
+      action(this.targetId, this.content).then((_) => {
+        this.$.replyBody.disabled = false
+        this.posting = false
+        this.close()
+      },
+      (err) => {
+        this.$.replyBody.disabled = false
+        this.posting = false
+        console.log(err)
+      })
+    },
+
+    close: function() {
+      this.content = ''
+      Polymer.IronOverlayBehaviorImpl.close.apply(this)
+    }
+
+  });
+</script>
+</dom-module>

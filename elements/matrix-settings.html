@@ -1,12 +1,12 @@
-<link rel="import" href="../../bower_components/polymer/polymer.html">
-<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
-<link rel="import" href="../../bower_components/paper-input/paper-input.html">
-<link rel="import" href="../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
-<link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
-<link rel="import" href="../../bower_components/paper-item/paper-item.html">
-<link rel="import" href="../../bower_components/iron-overlay-behavior/iron-overlay-behavior.html">
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="../bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../bower_components/iron-overlay-behavior/iron-overlay-behavior.html">
+<link rel="import" href="../bower_components/paper-slider/paper-slider.html">
 
-<link rel="import" href="../../bower_components/paper-slider/paper-slider.html">
 <link rel="import" href="./poly-helper-behavior.html">
 <link rel="import" href="./matrix-behavior.html">
 
@@ -74,7 +74,6 @@
       MatrixBehavior,
       Polymer.IronOverlayBehavior,
       PolyHelperBehavior,
-      SharedStateBehavior
     ],
 
     observers: [
@@ -185,7 +184,9 @@
     },
 
     loadSettings(clientReady) {
-      if (!clientReady) return
+      if (!clientReady) {
+        return
+      }
       this.loadUserSettings().then((result) => {
         if (result.tags && result.tags.settings) {
           console.log('loading User Settings..')
@@ -198,7 +199,7 @@
       })
     },
 
-    toggle(selector) {
+    toggle(_) {
       this.set('settings.filterOn', !this.settings.filterOn)
     },
 
