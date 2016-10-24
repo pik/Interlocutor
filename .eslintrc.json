@@ -1,0 +1,24 @@
+{
+    "parserOptions": {
+        "ecmaVersion": 6,
+        "sourceType": "script"
+    },
+    "rules": {
+        "no-debugger": 2,
+        "no-dupe-args": 2,
+        "no-dupe-keys": 2,
+        "no-duplicate-case": 2,
+        "no-extra-semi": 2,
+        "no-irregular-whitespace": 2,
+        "no-unreachable": 2,
+        "block-scoped-var": 2,
+        "consistent-return": 2,
+        "curly": 2,
+        "valid-typeof": 2,
+        "spaced-comment": 1,
+        "no-unused-vars":  [1, { "argsIgnorePattern": "^_"}],
+        "indent": [1, 2]
+
+    },
+    "plugins": ["html"]
+}
