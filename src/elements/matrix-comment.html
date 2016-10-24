@@ -121,21 +121,24 @@
 
   <script>
     Polymer({
-
       is: 'matrix-comment',
+
       behaviors: [
         PolyHelperBehavior,
         MatrixBehavior,
         SharedStateBehavior
       ],
+
       listeners: {
         'cancel': 'toggleReply',
         'flags-updated': '_recomputeChildrenFromEvent',
       },
+
       observers: [
         '_onFlagged(flagged.*)',
         // '_recomputeChildren(lastUpdated)'
       ],
+
       properties: {
         state: {
           type: Object,
@@ -164,81 +167,93 @@
           value: 0,
           computed: '_childrenCount(children.*)'
         },
+
         body: {
           type: Object,
           value: function() { return {} },
           computed: "_alias(comment.content.body, '{}')"
         },
+
         text: {
           type: String,
           value: '',
           computed: "_alias(body.text, '')"
         },
+
         commentBodyOpen: {
           type: Boolean,
           value: true,
         },
-        authorName: {
-          type: String,
-          value: 'pik'
-        },
+
         commentDate: {
           type: String,
           value: 'Edited 1 hour ago'
         },
+
         replyOpen: {
           type: Boolean,
           value: false,
           notify: true,
         },
+
         userId: {
           type: String,
           value: null,
           notify: true
         },
+
         canEdit: {
           type: Boolean,
           value: false,
           computed: '_canEdit(userId, comment)'
         },
+
         canFlag: {
           type: Boolean,
           value: false,
           computed: '_canFlag(userId, comment)'
         },
+
         canUpVote: {
           type: Boolean,
           value: false,
           computed: '_canUpVote(userId, comment)'
         },
+
         flagged: {
           type: Object,
           computed: "_alias(comment.flagged, '{}')"
         },
+
         voted: {
           type: Object,
           computed: "_alias(comment.voted, '{}')"
         },
+
         isFlagged: {
           type: Boolean,
           value: false,
           computed: '_isFlagged(flagged.*, userId)'
         },
+
         upVoted: {
           type: Boolean,
           value: false,
           computed: '_upVoted(voted.*, userId)'
         },
+
         commentAuthor: {
           type: String,
           value: '',
           computed: '_commentAuthor(lastUpdated)'
         },
+
         avatarUrl: {
           type: String,
           value: '',
           computed: '_avatarUrl(commentAuthor)'
         },
+
         editedTimestamp: {
           type: Number,
           value: null,
@@ -318,14 +333,6 @@
         return this.body.text
       },
 
-      // _dataChildren(comment, state) {
-      //   if (this.state[comment.event_id]) {
-      //     return this.state[comment.event_id]
-      //   } else {
-      //     this.state[comment.event_id] = []
-      //     return this.state[comment.event_id]
-      //   }
-      // },
 
       _children(_) {
         console.log('filtering _children', this.id)

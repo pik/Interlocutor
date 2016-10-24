@@ -26,18 +26,20 @@
 
 <script>
   Polymer({
-
     is: 'matrix-login',
+
     behaviors: [
       Polymer.IronOverlayBehavior,
       MatrixBehavior
     ],
+
     properties: {
       userId: {
         type: String,
         notify: true
       }
     },
+
     attached() {
       MatrixBehavior.foo = 5
     },

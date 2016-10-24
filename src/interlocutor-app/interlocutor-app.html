@@ -60,17 +60,19 @@
 
 <script>
   Polymer({
-
     is: 'interlocutor-app',
+
     behaviors: [
       MatrixBehavior,
       PolyHelperBehavior,
       SharedStateBehavior
     ],
+
     listeners: {
       'notify': 'notify',
       'settings-updated': '_touchLastUpdated'
     },
+
     properties: {
       // Default Settings are declared here so as to faciliate passing
       // a custom defaultSettings object
@@ -78,18 +80,23 @@
         type: Object,
         value() { return this._defaultSettings() }
       },
+
       homeServerAddress: {
         type: String,
       },
+
       defaultLogin: {
         type: String,
       },
+
       defaultPassword: {
         type: String,
       },
+
       roomId: {
         type: String,
       },
+
       room: {
         type: Object,
         value() { return {} }
@@ -117,6 +124,7 @@
         value: function() { return [] },
         computed: '_topLevelComments(dataTopLevelComments.*, lastUpdated)'
       },
+
       user: {
         type: Object,
         value: function() { return {} }
@@ -132,6 +140,7 @@
         value: null,
         notify: true
       },
+
       clientReady: {
         type: Boolean,
         value: false,
@@ -179,14 +188,14 @@
       this.notifyPath('lastUpdated')
     },
 
-    _topLevelComments: function() {
+    _topLevelComments() {
       console.log('_topLevelComments')
       return this.dataTopLevelComments.filter((comment) => {
         return comment.content.msgtype === 'm.comment' && this.permitted(comment)
       })
     },
 
-    logout: function() {
+    logout() {
       client.logout().then((success) => {
         this.userId = null
         delete client.credentials.userId
@@ -194,7 +203,7 @@
       })
     },
 
-    _credentials: function() {
+    _credentials() {
       return client.credentials
     },
 

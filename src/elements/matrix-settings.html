@@ -44,7 +44,7 @@
       <paper-icon-button class='close-button' icon="close" on-tap="close"></paper-icon-button>
     </div>
     <div class='settings-body'>
-      <paper-icon-button icon="settings-power" class$="[[_classBinding(settings.filterOn, 'on')]]" on-tap="toggle"></paper-icon-button>
+      <paper-icon-button icon="settings-power" class$="[[_classBinding(filterOn, 'on')]]" on-tap="toggle"></paper-icon-button>
 
       <paper-dropdown-menu label="profile">
         <paper-listbox class="dropdown-content" attr-for-selected="name" selected="[[activeSettingsProfile]]">
@@ -57,7 +57,7 @@
       <div>Auto-collapse below vote threshold: </div>
       <paper-slider id="voteCollapseThreshold" min="-200" max="200" value="{{settings.voteCollapseThreshold}}" disabled$="[[!filterOn]]" editable></paper-slider>
       <div> Moderator Identities: </div>
-      <div class="moderator-list" class$="[[_classBinding(settings.filterOn, 'on')]]">
+      <div class="moderator-list" class$="[[_classBinding(filterOn, 'on')]]">
         <template is="dom-repeat" items="[[trustedIdentities]]" as="identity">
           <p> [[identity]]<paper-icon-button icon="remove-circle" on-tap='removeIdentity' value="[[identity]]"></paper-icon-button>
         </template></p>
@@ -68,22 +68,25 @@
 
 <script>
   Polymer({
-
     is: 'matrix-settings',
+
     behaviors: [
       MatrixBehavior,
       Polymer.IronOverlayBehavior,
       PolyHelperBehavior,
       SharedStateBehavior
     ],
+
     observers: [
       'settingsUpdated(settings.*)',
       'loadSettings(clientReady)',
       '_settingsFromDefaults(defaultSettings)'
     ],
+
     listeners: {
       'iron-select': '_settingsProfileChanged'
     },
+
     properties: {
       customSettings: {
         type: Object,
@@ -120,15 +123,18 @@
         },
         computed: '_objectKeys(settings.trustedIdentities.*)'
       },
+
       userId: {
         type: String,
       },
+
       newIdentity: {
         type: String,
         value: '',
         notify: true
       }
     },
+
     _settingsProfileChanged(event) {
       if (event && event.detail.item) {
         const newProfileName = event.detail.item.attributes.name.value
@@ -195,14 +201,6 @@
     toggle(selector) {
       this.set('settings.filterOn', !this.settings.filterOn)
     },
-
-    _filterOn(filterOn) {
-      return filterOn
-    },
-    // updatedUIState(filterOn) {
-    //   this.$.flagKillThreshold.disabled = !filterOn
-    //   this.$.voteCollapseThreshold.disabled = !filterOn
-    // },
 
   });
 </script>
