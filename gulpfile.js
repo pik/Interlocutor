@@ -5,12 +5,22 @@ const gulp    = require('gulp')
 const gulpif  = require('gulp-if')
 const crisper = require('gulp-crisper')
 const babel   = require('gulp-babel')
+const uglify  = require('gulp-uglify')
+const htmlMinifier = require('gulp-html-minifier')
+const postcss = require('gulp-postcss')
+const cssnano = require('cssnano')
+const gulpCssnano = require('gulp-cssnano')
+const autoprefixer = require('autoprefixer')
 
 require('es6-promise').polyfill()
 
 // Got problems? Try logging 'em
 const logging = require('plylog')
 logging.setVerbose()
+// Or
+// const debug = require('gulp-debug');
+// and add pipe step to debug e.g.
+// .pipe(gulpif(/\.css$/, debug({ title: 'IN CSS PIPE' })))
 
 // !!! IMPORTANT !!! //
 // Keep the global.config above any of the gulp-tasks that depend on it
@@ -50,13 +60,21 @@ const project = require('./gulp-tasks/project.js')
 // will be split out into temporary files. You can use gulpif to filter files
 // out of the stream and run them through specific tasks. An example is provided
 // which filters all images and runs them through imagemin
+
+// .pipe(gulpif('**/*.{png,gif,jpg,svg}', images.minify()))
+    // .pipe(gulpif(/\.html$/, crisper()))
 function source() {
   return project.splitSource()
     // Add your own build tasks here!
-    .pipe(gulpif('**/*.html', crisper()))
-    .pipe(gulpif('**/*.js', babel({
-            presets: ['es2015']
-        })))     // .pipe(gulpif('**/*.{png,gif,jpg,svg}', images.minify()))
+    .pipe(gulpif(/\.js$/, babel({
+        presets: ['es2015']
+      })))
+    .pipe(gulpif(/\.html$/, htmlMinifier({
+        collapseWhitespace: true,
+        removeComments: true,
+        minifyCSS: true
+      })))
+    .pipe(gulpif(/\.js$/, uglify()))
     .pipe(project.rejoin()) // Call rejoin when you're finished
 }
 
@@ -66,6 +84,14 @@ function source() {
 // case you need it :)
 function dependencies() {
   return project.splitDependencies()
+    // PolymerBuild HtmlSplitter Does not split out css atm
+    // https://github.com/Polymer/polymer-build/pull/40
+    .pipe(gulpif(/\.html$/, htmlMinifier({
+        collapseWhitespace: true,
+        removeComments: true,
+        minifyCSS: true
+      })))
+    .pipe(gulpif(/\.js$/, uglify()))
     .pipe(project.rejoin())
 }
 
