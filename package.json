@@ -27,6 +27,7 @@
     "gulp-postcss": "^6.2.0",
     "gulp-uglify": "^2.0.0",
     "gulp-vulcanize": "^6.1.0",
+    "iron-icon-extractor": "git+https://github.com/pik/iron-icon-extractor.git",
     "merge-stream": "^1.0.0",
     "plylog": "^0.4.0",
     "polymer-build": "^0.4.1"
