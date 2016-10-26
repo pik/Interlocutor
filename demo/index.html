@@ -1,0 +1,33 @@
+<!doctype html>
+
+<html>
+  <head>
+    <title>interlocutor-app</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <link rel="manifest" href="../manifest.json">
+    <link rel="import" href="../elements/demo-room-select.html">
+    <link rel="import" href="../interlocutor-app.html">
+
+<!--     <link rel="import" href="./bower_components/iron-demo-helpers/demo-snippet.html"> -->
+    <link rel="import" href="../bower_components/iron-demo-helpers/demo-pages-shared-styles.html">
+
+    <style is="custom-style" include="demo-pages-shared-styles"></style>
+  </head>
+  <body>
+    <h2 style="text-align: center">Interlocutor Demo</h2>
+    <!-- room-id="!rWBJOmFQXtjuMwPLLe:pik-test" -->
+    <!-- room-id="!JimgvUxVVvdTmXyaeY:pik-test" -->
+
+    <demo-room-select app-id='interlocutorApp'>
+    </demo-room-select>
+    <interlocutor-app
+      id='interlocutorApp'
+      default-login="pik"
+      default-password="1234"
+      home-server-address="http://localhost:8008">
+    </interlocutor-app>
+  </body>
+</html>

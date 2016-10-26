@@ -128,11 +128,13 @@
       listeners: {
         'cancel': 'toggleReply',
         'flags-updated': '_recomputeChildrenFromEvent',
+        'children-count-changed': '_recomputeChildrenCountFromEvent'
       },
 
       observers: [
         '_onFlagged(flagged.*)',
-        // '_recomputeChildren(lastUpdated)'
+        '_recomputeChildren(lastUpdated)',
+        '_childrenCount(children.*)'
       ],
 
       properties: {
@@ -160,8 +162,6 @@
 
         childrenCount: {
           type: Number,
-          value: 0,
-          computed: '_childrenCount(children.*)'
         },
 
         body: {
@@ -257,17 +257,26 @@
         }
       },
 
-      _childrenCount(changes) {
-        // Includes itself (1)
-        const _count = changes.base.reduce((prev, cur) => {
-          // return 0 for childrenCount the children have not computed yet
+      _recomputeChildrenCountFromEvent(event, source) {
+        if (source !== this) {
+          event.preventDefault()
+          this._childrenCount()
+        }
+      },
+
+      // TODO Fix this spammy recompute
+      _childrenCount(force) {
+        const count = this.children.reduce((prev, cur) => {
           return prev + (cur.childrenCount || 0)
         }, 1)
-        this.comment.childrenCount = _count
-        return _count
+        if (this.childrenCount !== count || force) {
+          this.comment.childrenCount = this.childrenCount = count
+          this.fire('children-count-changed', this, { cancellable: true })
+        }
       },
 
       attached() {
+        this._childrenCount(true)
         this.comment.children.addListener(this, 'dataChildren')
       },
 
@@ -282,6 +291,7 @@
       _recomputeChildrenFromEvent(event, source) {
         // Because fire goes to back to itself by default...
         if (source !== this) {
+          console.log('_recomputeChildrenFromEvent')
           event.preventDefault()
           // Because Polymer has no hard recompute
           this._pathEffector('dataChildren.*', this.dataChildren)
@@ -289,7 +299,7 @@
       },
 
       _onFlagged() {
-        this.fire('flags-updated', this, { cancelable: true })
+        this.fire('flags-updated', this, { cancellable: true })
       },
 
       _avatarUrl(author_id) {
@@ -331,7 +341,7 @@
 
 
       _children(_) {
-        console.log('filtering _children', this.id)
+        // console.log('filtering _children', this.id)
         return this.dataChildren.filter((comment) => {
           return comment.content.msgtype === 'm.comment' && this.permitted(comment)
         })

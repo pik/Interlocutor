@@ -1,5 +1,5 @@
 <script src="./bower_components/webcomponentsjs/webcomponents-lite.js"></script>
-<script src="./node_modules/matrix-js-sdk/dist/browser-matrix-dev-lite.min.js"></script>
+<script src="./node_modules/matrix-js-sdk/dist/browser-matrix-dev.js"></script>
 <script src="./bower_components/moment/min/moment.min.js"></script>
 <script src="./src/scripts.js"></script>
 
@@ -30,10 +30,9 @@
 
       }
 
-
     </style>
     <template is="dom-if" if="[[!clientReady]]">
-      <span>
+      <span hidden="[[!roomId]]">
         Comments are loading
         <paper-spinner-lite active></paper-spinner-lite>
       </span>
@@ -98,6 +97,8 @@
 
       roomId: {
         type: String,
+        value: null,
+        observer: 'initializeRoom'
       },
 
       room: {
@@ -151,6 +152,11 @@
     },
 
     attached() {
+      this.initializeClient()
+    },
+
+    initializeClient() {
+      if (this.client) return
       window.client = this.client = matrixcs.createClient(this.homeServerAddress)
       client.txnId = 0
       this.login(this.defaultLogin, this.defaultPassword).then((result)=> {
@@ -158,27 +164,34 @@
       }, (err) => {
         console.log(err)
       })
-      setTimeout(()=> {
+    },
+
+    initializeRoom(_) {
+      this.debounce('initialize-room', ()=> {
         window.room = this.room = client.getRoom(this.roomId)
         this.state[this.roomId] = { children: [] }
-        try {
-          this.buildInitialRoomState(this.roomId).then((_) => {
-            this.clientReady = true
-            client.on("Room.timeline", (matrixEvent, room, toStartOfTimeline) => {
-              const event = matrixEvent.event
-              console.log('received Room.timeline event', event.event_id, event.type, room.room_id)
-              this.processEvent(event)
-            })
-            // FIX THIS ALSO
-            this.dataTopLevelComments = this.state[this.roomId].children
-            this.dataTopLevelComments.addListener(this, 'dataTopLevelComments')
-          }, (err) => {
-            console.log(err)
-          })
-        } catch (e) {
-          console.log(e)
-        }
+        this.initializeComments()
       }, 1000)
+    },
+
+    initializeComments() {
+      try {
+        this.buildInitialRoomState(this.roomId).then((_) => {
+          this.clientReady = true
+          client.on("Room.timeline", (matrixEvent, room, toStartOfTimeline) => {
+            const event = matrixEvent.event
+            console.log('received Room.timeline event', event.event_id, event.type, room.room_id)
+            this.processEvent(event)
+          })
+          // FIX THIS ALSO
+          this.dataTopLevelComments = this.state[this.roomId].children
+          this.dataTopLevelComments.addListener(this, 'dataTopLevelComments')
+        }, (err) => {
+          console.log(err)
+        })
+      } catch (e) {
+        console.log(e)
+      }
     },
 
     _hasComments(dataTopLevelComments, clientReady) {

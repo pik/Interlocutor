@@ -1,0 +1,109 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<!-- <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html"> -->
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+
+<link rel="import" href="./matrix-behavior.html">
+
+<dom-module id="demo-room-select">
+  <template>
+    <style>
+      :host {
+        margin-bottom: 5em;
+        display: flex;
+        flex-direction: column;
+      }
+      paper-input {
+        width: 16em;
+      }
+      .room-navigation {
+        display: flex;
+        flex-direction: row;
+      }
+      .room-subnav {
+        margin-right: 2em
+      }
+    </style>
+    <div>
+      <template is="dom-if" if="[[currentRoomName]]">
+        <p> Currently viewing the discussion: {{currentRoomName}}. </p>
+        <p> Room Id: {{roomId}}</p>
+      </template>
+      <template is="dom-if" if="[[!currentRoomName]]">
+        You are not connected to any discussion join an existing one or start a new one to try interlocutor:
+      </template>
+    </div>
+    <div class="room-navigation">
+      <div class="room-subnav">
+        <paper-input label="Discussion Alias or Id" value="{{aliasOrId}}" minlength="2" auto-validate=true> </paper-input>
+        <paper-button on-tap="joinRoom">join</paper-button>
+      </div>
+      <div class="room-subnav">
+        <paper-input label="New Discussion Name" value="{{roomName}}" minlength="2" auto-validate> </paper-input>
+        <paper-button on-tap="createRoom">create</paper-button>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    Polymer({
+
+      is: 'demo-room-select',
+
+      behaviors: [
+        MatrixBehavior
+      ],
+
+      properties: {
+        aliasOrId: {
+          type: String,
+          value: ''
+        },
+        roomName: {
+          type: String,
+          value: ''
+        },
+        roomAlias: {
+          type: String,
+          value: null
+        },
+        currentRoomName: {
+          type: String,
+          value: null
+        },
+        roomId: {
+          type: String,
+          value: null,
+          notify: true
+        },
+        appId: {
+          type: String
+        }
+      },
+
+      joinRoom() {
+        if (this.alias === '') return
+        client.joinRoom(this.aliasOrId).then((result) => {
+          document.getElementById(this.appId).roomId =  this.roomId = result.roomId
+        }, (err) => {
+          debugger
+          // {"errcode":"M_NOT_FOUND","error":"Room alias <alias> not found"}
+          if (err.errcode === "M_NOT_FOUND") {
+            document.getElementById(this.appId).notify(`No discussion found for id: ${this.aliasOrId}`)
+          } else {
+            throw err
+          }
+        })
+      },
+
+      createRoom() {
+        if (this.roomName === '') return
+        const roomOpts = MatrixBehavior.defaultRoomOpts()
+        roomOpts.name = this.roomName
+        MatrixBehavior.createRoom(roomOpts).then((result) => {
+          document.getElementById(this.appId).roomId =  this.roomId = result.room_id
+        })
+      }
+    });
+  </script>
+</dom-module>
