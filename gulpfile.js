@@ -42,7 +42,7 @@ global.config = {
   // Service Worker precache options based on
   // https://github.com/GoogleChrome/sw-precache#options-parameter
   swPrecacheConfig: {
-    navigateFallback: '/interlocutor-app.html'
+    navigateFallback: './interlocutor-app.html'
   }
 }
 
@@ -67,8 +67,13 @@ function source() {
   return project.splitSource()
     // Add your own build tasks here!
     .pipe(gulpif(/\.js$/, babel({
-        presets: ['es2015']
-      })))
+      presets: ['es2015'],
+      plugins: [
+        ["babel-plugin-transform-builtin-extend", {
+            globals: ["Error", "Array"]
+        }]
+      ]
+    })))
     .pipe(gulpif(/\.html$/, htmlMinifier({
         collapseWhitespace: true,
         removeComments: true,
