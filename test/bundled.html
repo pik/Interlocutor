@@ -1,0 +1,27 @@
+<!doctype html>
+
+<html>
+  <head>
+    <title>interlocutor-app-bundled</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <link rel="import" href="../build/bundled/interlocutor-app.html">
+  </head>
+  <body>
+    <h2 style="text-align: center">Interlocutor App Bundled</h2>
+    <!-- room-id="!rWBJOmFQXtjuMwPLLe:pik-test" -->
+    <!-- room-id="!JimgvUxVVvdTmXyaeY:pik-test" -->
+
+    <demo-room-select app-id='interlocutorApp'>
+    </demo-room-select>
+    <interlocutor-app
+      id='interlocutorApp'
+      default-login="pik"
+      default-password="1234"
+      room-id="!JimgvUxVVvdTmXyaeY:pik-test"
+      home-server-address="http://localhost:8008">
+    </interlocutor-app>
+  </body>
+</html>
