@@ -1,5 +1,6 @@
 {
   "entrypoint": "interlocutor-app.html",
+  "shell": "interlocutor-app.html",
   "fragments": [
   ],
   "sourceGlobs": [
