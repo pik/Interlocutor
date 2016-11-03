@@ -139,7 +139,6 @@
           return client.loginWithPassword(username, password).then((result) => {
             client.credentials.userId = result.user_id
             client._http.opts.accessToken  = result.access_token
-            this.userId = client.credentials.userId
             return result
         })
       }.bind(this)

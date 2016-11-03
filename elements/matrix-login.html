@@ -16,9 +16,9 @@
         box-shadow: rgba(0, 0, 0, 0.24) -2px 5px 12px 0px, rgba(0, 0, 0, 0.12) 0px 0px 12px 0px;
       }
     </style>
-    <div class='close-wrapper'>
+<!--     <div class='close-wrapper'>
       <paper-icon-button class='close-button' icon="close" on-tap="close"></paper-icon-button>
-    </div>
+    </div> -->
     <div>
       <paper-input id="username" label="username"></paper-input>
       <paper-input id="password" label="password"></paper-input>
@@ -56,9 +56,9 @@
           this.userId = result.user_id
           this.close()
         }, (err) => {
-          if (err.httpStatus) {
+          if (err.httpStatus === 403) {
             this.$.password.value = ''
-            this.fire('notify', 'Incorrect Login Credentials')
+            this.fire('notify', 'Incorrect Login Credentials.')
           } else {
             this.fire('notify', 'Something went wrong, please try again.')
           }

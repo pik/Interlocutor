@@ -316,7 +316,7 @@
       },
 
       _isFlagged(_) {
-        return this.flagged[this.userId]
+        return !!this.flagged[this.userId]
       },
 
       toggleUpVote() {
