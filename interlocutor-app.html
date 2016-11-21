@@ -37,17 +37,21 @@
         <paper-spinner-lite active></paper-spinner-lite>
       </span>
     </template>
-    <div class='user-section' hidden="[[!clientReady]]">
-      <template is="dom-if" if="[[userId]]">
-          <span>[[userId]]</span>
-          <paper-button on-tap="logout">Logout</paper-button>
-      </template>
-      <template is="dom-if" if="[[!userId]]">
-        <paper-button on-tap="openLogin">Login</paper-button>
-      </template>
-      <paper-icon-button on-tap="openSettings" icon="settings"></paper-icon-button>
-      <matrix-settings id="settings" client-ready="[[clientReady]]" user-id="[[userId]]" default-settings="[[defaultSettings]]" tabindex="-1" with-backdrop></matrix-settings>
-      <matrix-login id="login" tabindex="-1" with-backdrop user-id="{{userId}}"></matrix-login>
+    <div class='top-section'>
+      <span class='user-section'>
+        <template is="dom-if" if="[[userId]]">
+            <span>[[userId]]</span>
+            <paper-button on-tap="logout">Logout</paper-button>
+        </template>
+        <template is="dom-if" if="[[!userId]]">
+          <paper-button on-tap="openLogin">Login</paper-button>
+        </template>
+        <matrix-login id="login" tabindex="-1" with-backdrop user-id="{{userId}}"></matrix-login>
+      </span>
+      <span class='settings-section' hidden="[[!clientReady]]">
+        <paper-icon-button on-tap="openSettings" icon="settings"></paper-icon-button>
+        <matrix-settings id="settings" client-ready="[[clientReady]]" user-id="[[userId]]" default-settings="[[defaultSettings]]" tabindex="-1" with-backdrop></matrix-settings>
+      </span>
     </div>
     <paper-toast id="toast" text="" vertical-align="top"></paper-toast>
     <div class='comment-section' hidden="[[!clientReady]]">
@@ -72,8 +76,13 @@
 
     listeners: {
       'notify': 'notify',
-      'settings-updated': '_touchLastUpdated'
+      'settings-updated': '_touchLastUpdated',
+      'logged-in': 'onLoggedIn'
     },
+
+    observers: [
+      'initializeRoom(roomId)'
+    ],
 
     properties: {
       // Default Settings are declared here so as to faciliate passing
@@ -98,12 +107,11 @@
       roomId: {
         type: String,
         value: null,
-        observer: 'initializeRoom'
       },
 
       room: {
         type: Object,
-        value() { return {} }
+        value: null
       },
 
       state: {
@@ -166,12 +174,24 @@
       })
     },
 
-    initializeRoom(_) {
-      this.debounce('initialize-room', ()=> {
-        window.room = this.room = client.getRoom(this.roomId)
-        this.state[this.roomId] = { children: [] }
-        this.initializeComments()
-      }, 1000)
+    initializeRoom(roomId) {
+      if (!roomId) return
+      // debbounce if client is not loggedIn yet
+      if (!window.client || !window.client.credentials.userId) {
+        return this.debounce('initialize-room', this.initializeRoom.bind(this), 300)
+      }
+      window.room = this.room = client.getRoom(this.roomId)
+      // debounce if the room create event hasn't been processed yet
+      if (!this.room) {
+        return this.debounce('initialize-room', this.initializeRoom.bind(this), 300)
+      }
+      this.state[this.roomId] = { children: [] }
+      this.initializeComments()
+    },
+
+    onLoggedIn(userId) {
+      if (!this.roomId) return
+      client.joinRoom(this.roomId)
     },
 
     initializeComments() {
@@ -199,9 +219,10 @@
     },
 
     _touchLastUpdated() {
+      // TODO switch to _pathEffector
+      // Really should be public API for forcing re-computes in Polymer..
       console.log('_touchLastUpdated')
       this.lastUpdated += 0.1
-      this.notifyPath('lastUpdated')
     },
 
     _topLevelComments() {
@@ -212,10 +233,8 @@
     },
 
     logout() {
-      client.logout().then((success) => {
+      this.login(this.defaultLogin, this.defaultPassword).then((success) => {
         this.userId = null
-        delete client.credentials.userId
-        delete client._http.opts.accessToken
       })
     },
 

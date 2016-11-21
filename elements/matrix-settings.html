@@ -78,7 +78,7 @@
 
     observers: [
       'settingsUpdated(settings.*)',
-      'loadSettings(clientReady)',
+      'loadSettings(clientReady, userId)',
       '_settingsFromDefaults(defaultSettings)'
     ],
 
@@ -148,7 +148,7 @@
       if (defaultSettings && this.activeSettingsProfile === null) {
         this.activeSettingsProfile = 'defaultSettings'
         window.settings = this.settings
-        this.set('settings', defaultSettings)
+        this.set('settings', deepCopy(defaultSettings))
       }
     },
 
@@ -179,15 +179,15 @@
       }
     },
 
-    persistSettings() {
+    persistSettings(settings) {
       // Don't try to persist settings for anonymous users
       if (this.userId) {
         this.saveUserSettings(this.settings)
       }
     },
 
-    loadSettings(clientReady) {
-      if (!clientReady) {
+    loadSettings(clientReady, userId) {
+      if (!clientReady || !userId) {
         return
       }
       this.loadUserSettings().then((result) => {

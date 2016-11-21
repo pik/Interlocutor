@@ -19,18 +19,21 @@
       .room-navigation {
         display: flex;
         flex-direction: row;
-        flex-wrap: wrap;
+        flex-wrap: wrap;`
       }
       .room-subnav {
         margin-right: 2em
       }
+      .room-info {
+        font-size: 16px;
+      }
     </style>
-    <div>
-      <template is="dom-if" if="[[currentRoomName]]">
-        <p> Currently viewing the discussion: {{currentRoomName}}. </p>
-        <p> Room Id: {{roomId}}</p>
+    <div class="room-info">
+      <template is="dom-if" if="[[currentRoomAlias]]">
+        <p> Currently viewing the discussion: <b> {{currentRoomAlias}}</b>. </p>
+        <p> Room Id: <b>{{currentRoomId}}</b></p>
       </template>
-      <template is="dom-if" if="[[!currentRoomName]]">
+      <template is="dom-if" if="[[!currentRoomAlias]]">
         You are not connected to any discussion join an existing one or start a new one to try interlocutor:
       </template>
     </div>
@@ -54,6 +57,9 @@
       behaviors: [
         MatrixBehavior
       ],
+      observers: [
+        '_currentRoomAlias(currentRoomId)'
+      ],
 
       properties: {
         aliasOrId: {
@@ -64,15 +70,11 @@
           type: String,
           value: ''
         },
-        roomAlias: {
+        currentRoomAlias: {
           type: String,
           value: null
         },
-        currentRoomName: {
-          type: String,
-          value: null
-        },
-        roomId: {
+        currentRoomId: {
           type: String,
           value: null,
           notify: true
@@ -85,9 +87,8 @@
       joinRoom() {
         if (this.alias === '') return
         client.joinRoom(this.aliasOrId).then((result) => {
-          document.getElementById(this.appId).roomId =  this.roomId = result.roomId
+          document.getElementById(this.appId).roomId =  this.currentRoomId = result.roomId
         }, (err) => {
-          debugger
           // {"errcode":"M_NOT_FOUND","error":"Room alias <alias> not found"}
           if (err.errcode === "M_NOT_FOUND") {
             document.getElementById(this.appId).notify(`No discussion found for id: ${this.aliasOrId}`)
@@ -102,8 +103,23 @@
         const roomOpts = MatrixBehavior.defaultRoomOpts()
         roomOpts.name = this.roomName
         MatrixBehavior.createRoom(roomOpts).then((result) => {
-          document.getElementById(this.appId).roomId =  this.roomId = result.room_id
+          document.getElementById(this.appId).roomId =  this.currentRoomId = result.room_id
         })
+      },
+
+      _currentRoomAlias(_) {
+        if (!this.currentRoomId) return
+        room = client.getRoom(this.currentRoomId)
+        // Room Creation only returns a room_id, so we should wait for the timeline event
+        // to fill in the room name if it's not set yet.
+        if (room && room.name !== "Empty room") {
+          this.set('currentRoomAlias', room.name)
+          this.roomName = ''
+          this.aliasOrId = ''
+        } else {
+          this.currentRoomAlias = 'Fetching room name..'
+          this.async(this._currentRoomAlias.bind(this), 300)
+        }
       }
     });
   </script>

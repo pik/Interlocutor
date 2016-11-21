@@ -157,7 +157,7 @@
         children: {
           type: Array,
           value: function() { return [] },
-          computed: '_children(dataChildren.*, lastUpdated)',
+          computed: '_children(dataChildren.*)',
         },
 
         childrenCount: {
@@ -341,7 +341,7 @@
 
 
       _children(_) {
-        // console.log('filtering _children', this.id)
+        console.log('filtering _children')
         return this.dataChildren.filter((comment) => {
           return comment.content.msgtype === 'm.comment' && this.permitted(comment)
         })

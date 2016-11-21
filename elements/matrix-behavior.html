@@ -143,7 +143,9 @@
         })
       }.bind(this)
       if (client.credentials.userId) {
-        return client.logout().then(_login)
+        return client.logout().then(_login, (err) => {
+          console.log(err)
+        })
       } else {
         return _login()
       }

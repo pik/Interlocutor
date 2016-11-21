@@ -21,7 +21,7 @@
     </div> -->
     <div>
       <paper-input id="username" label="username"></paper-input>
-      <paper-input id="password" label="password"></paper-input>
+      <paper-input id="password" label="password" type="password"></paper-input>
     </div>
     <div>
       <paper-button class='reply-cancel' on-tap="login">[login]</paper-button>
@@ -54,6 +54,7 @@
         .then((result) => {
           this.$.username.value = this.$.password.value = ''
           this.userId = result.user_id
+          this.fire('logged-in', result.user_id)
           this.close()
         }, (err) => {
           if (err.httpStatus === 403) {
