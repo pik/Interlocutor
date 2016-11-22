@@ -230,7 +230,7 @@
     _topLevelComments() {
       console.log('_topLevelComments')
       return this.dataTopLevelComments.filter((comment) => {
-        return comment.content.msgtype === 'm.comment' && this.permitted(comment)
+        return comment.content.msgtype === 'interlocutor.comment' && this.permitted(comment)
       })
     },
 
@@ -264,7 +264,7 @@
 
     openReplyOverlay() {
       this.$.reply.targetId = this.roomId
-      this.$.reply.action = 'm.comment'
+      this.$.reply.action = 'interlocutor.comment'
       this.$.reply.open()
     },
 

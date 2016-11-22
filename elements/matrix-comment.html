@@ -369,13 +369,13 @@
 
       openReplyOverlay() {
         this.$.reply.targetId = this.comment.event_id
-        this.$.reply.action = 'm.comment'
+        this.$.reply.action = 'interlocutor.comment'
         this.$.reply.open()
       },
 
       openEditOverlay() {
         this.$.reply.targetId = this.comment.event_id
-        this.$.reply.action = 'm.edit'
+        this.$.reply.action = 'interlocutor.edit'
         this.$.reply.content = this.body.text
         this.$.reply.open()
       },
