@@ -132,23 +132,33 @@
       return (!instaGib && flagCount < settings.flagKillThreshold)
     },
 
-    login(username, password) {
+    createClientAndLogin(username, password, homeServerAddress) {
+      window.client = matrixcs.createClient(homeServerAddress)
+      client.txnId = 0
       const _login = function () {
-          delete client.credentials.userId
-          delete client._http.opts.accessToken
           return client.loginWithPassword(username, password).then((result) => {
             client.credentials.userId = result.user_id
             client._http.opts.accessToken  = result.access_token
             return result
         })
-      }.bind(this)
+      }
+
+      let promise
       if (client.credentials.userId) {
-        return client.logout().then(_login, (err) => {
+        client.stopClient()
+        promise = client.logout().then(_login, (err) => {
           console.log(err)
         })
       } else {
-        return _login()
+        promise = _login()
       }
+
+      return promise.then((result)=> {
+        client.startClient({ pendingEventOrdering: 'detached' })
+        return result
+      }, (err) => {
+        console.log(err)
+      })
     },
 
     addEvent (event) {

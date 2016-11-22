@@ -1,11 +1,12 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <!-- <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html"> -->
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/vaadin-combo-box/vaadin-combo-box.html">
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
 
-<link rel="import" href="./matrix-behavior.html">
+<link rel="import" href="./elements/matrix-behavior.html">
 
-<dom-module id="demo-room-select">
+<dom-module id="interlocutor-demo-room-select">
   <template>
     <style>
       :host {
@@ -39,7 +40,7 @@
     </div>
     <div class="room-navigation">
       <div class="room-subnav">
-        <paper-input label="Discussion Alias or Id" value="{{aliasOrId}}" minlength="2" auto-validate=true> </paper-input>
+        <vaadin-combo-box label="Discussion Alias or Id" value="{{aliasOrId}}" minlength="2" auto-validate=true items="[[rooms]]"> </vaadin-combo-box >
         <paper-button on-tap="joinRoom">join</paper-button>
       </div>
       <div class="room-subnav">
@@ -52,13 +53,14 @@
   <script>
     Polymer({
 
-      is: 'demo-room-select',
+      is: 'interlocutor-demo-room-select',
 
       behaviors: [
         MatrixBehavior
       ],
       observers: [
-        '_currentRoomAlias(currentRoomId)'
+        '_currentRoomAlias(currentRoomId)',
+        '_setupRoomList(loggedIn)',
       ],
 
       properties: {
@@ -81,7 +83,25 @@
         },
         appId: {
           type: String
+        },
+        rooms: {
+          type: Array,
+          value() { return [] }
+        },
+        loggedIn: {
+          type: Boolean
         }
+      },
+
+      _setupRoomList(loggedIn) {
+        if (!loggedIn) return
+        client.on('sync', (syncState, oldState, data) => {
+          if (syncState === "PREPARED") {
+            this.rooms = client.getRooms().map((room) => {
+              return room.roomId
+            })
+          }
+        })
       },
 
       joinRoom() {

@@ -42,6 +42,9 @@
       userId: {
         type: String,
         notify: true
+      },
+      homeServerAddress: {
+        type: String
       }
     },
 
@@ -50,7 +53,7 @@
     },
 
     login() {
-      MatrixBehavior.login(this.$.username.value, this.$.password.value)
+      MatrixBehavior.createClientAndLogin(this.$.username.value, this.$.password.value, this.homeServerAddress)
         .then((result) => {
           this.$.username.value = this.$.password.value = ''
           this.userId = result.user_id

@@ -8,25 +8,9 @@
     <meta name="mobile-web-app-capable" content="yes">
 
     <link rel="manifest" href="../manifest.json">
-    <link rel="import" href="../elements/demo-room-select.html">
-    <link rel="import" href="../interlocutor-app.html">
-
-<!--     <link rel="import" href="./bower_components/iron-demo-helpers/demo-snippet.html"> -->
-    <link rel="import" href="../bower_components/iron-demo-helpers/demo-pages-shared-styles.html">
-
-    <style is="custom-style" include="demo-pages-shared-styles"></style>
+    <link rel="import" href="../interlocutor-demo-app.html">
   </head>
   <body>
-    <h2 style="text-align: center">Interlocutor Demo</h2>
-    <!-- room-id="!UWPATDTIHMNoEKyXqn:pik-test" -->
-
-    <demo-room-select app-id='interlocutorApp'>
-    </demo-room-select>
-    <interlocutor-app
-      id='interlocutorApp'
-      default-login="interlocutorTester"
-      default-password="18404081b72e2630"
-      home-server-address="https://matrix.org">
-    </interlocutor-app>
+    <interlocutor-demo-app></interlocutor-demo-app>
   </body>
 </html>

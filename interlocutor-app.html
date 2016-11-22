@@ -46,7 +46,7 @@
         <template is="dom-if" if="[[!userId]]">
           <paper-button on-tap="openLogin">Login</paper-button>
         </template>
-        <matrix-login id="login" tabindex="-1" with-backdrop user-id="{{userId}}"></matrix-login>
+        <matrix-login id="login" tabindex="-1" with-backdrop user-id="{{userId}}" home-server-address="[[homeServerAddress]]"></matrix-login>
       </span>
       <span class='settings-section' hidden="[[!clientReady]]">
         <paper-icon-button on-tap="openSettings" icon="settings"></paper-icon-button>
@@ -156,6 +156,11 @@
       clientReady: {
         type: Boolean,
         value: false,
+      },
+
+      loggedIn: {
+        type: Boolean,
+        notify: true
       }
     },
 
@@ -164,13 +169,8 @@
     },
 
     initializeClient() {
-      if (this.client) return
-      window.client = this.client = matrixcs.createClient(this.homeServerAddress)
-      client.txnId = 0
-      this.login(this.defaultLogin, this.defaultPassword).then((result)=> {
-        client.startClient({ pendingEventOrdering: 'detached' })
-      }, (err) => {
-        console.log(err)
+      this.createClientAndLogin(this.defaultLogin, this.defaultPassword, this.homeServerAddress).then((success) => {
+        this.loggedIn = true
       })
     },
 
@@ -190,8 +190,10 @@
     },
 
     onLoggedIn(userId) {
-      if (!this.roomId) return
-      client.joinRoom(this.roomId)
+      this.loggedIn = true
+      if (this.roomId) {
+        client.joinRoom(this.roomId)
+      }
     },
 
     initializeComments() {
@@ -233,7 +235,8 @@
     },
 
     logout() {
-      this.login(this.defaultLogin, this.defaultPassword).then((success) => {
+      this.loggedIn = false
+      this.createClientAndLogin(this.defaultLogin, this.defaultPassword, this.homeServerAddress).then((success) => {
         this.userId = null
       })
     },

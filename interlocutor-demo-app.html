@@ -1,0 +1,37 @@
+<link rel="import" href="./interlocutor-app.html">
+<link rel="import" href="./interlocutor-demo-room-select.html">
+<link rel="import" href="./bower_components/iron-demo-helpers/demo-pages-shared-styles.html">
+
+<dom-module id="interlocutor-demo-app">
+  <template>
+    <style>
+    </style>
+    <h2 style="text-align: center">Interlocutor Demo</h2>
+
+    <interlocutor-demo-room-select
+      app-id='interlocutorApp'
+      logged-in="{{loggedIn}}">
+    </interlocutor-demo-room-select>
+    <interlocutor-app
+      logged-in="{{loggedIn}}"
+      id='interlocutorApp'
+      default-login="interlocutorTester"
+      default-password="18404081b72e2630"
+      home-server-address="http://localhost:8008">
+    </interlocutor-app>
+  </template>
+
+<script>
+  Polymer({
+    is: 'interlocutor-demo-app',
+
+    properties: {
+      loggedIn: {
+        type: Boolean,
+        default: false,
+      }
+    }
+
+  })
+</script>
+</dom-module>
