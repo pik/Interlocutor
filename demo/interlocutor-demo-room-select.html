@@ -99,28 +99,43 @@
             this.rooms = client.getRooms().map((room) => {
               return room.roomId
             })
+            // Guard agains Polymer default value being undefined
+          } else if (this.rooms && this.rooms.length) {
+            const rooms = client.getRooms().map((room) => {
+              return room.roomId
+            })
+            if (!deepCompare(rooms, this.rooms)) {
+              this.rooms = rooms
+            }
           }
         })
       },
 
       joinRoom() {
         if (this.alias === '') return
+        this.notify('Joining discussion..')
         client.joinRoom(this.aliasOrId).then((result) => {
           document.getElementById(this.appId).roomId =  this.currentRoomId = result.roomId
         }, (err) => {
           // {"errcode":"M_NOT_FOUND","error":"Room alias <alias> not found"}
           if (err.errcode === "M_NOT_FOUND") {
-            document.getElementById(this.appId).notify(`No discussion found for id: ${this.aliasOrId}`)
+            this.notify(`No discussion found for id: ${this.aliasOrId}`)
           } else {
-            throw err
+            this.notify(`Failed to join discussion: ${err.message}`)
           }
         })
+      },
+
+      notify(text) {
+        //Because interlocutor-app isn't a demo-room-select parent
+        document.getElementById(this.appId).notify({ detail: text})
       },
 
       createRoom() {
         if (this.roomName === '') return
         const roomOpts = MatrixBehavior.defaultRoomOpts()
         roomOpts.name = this.roomName
+        this.notify('Starting new discussion..')
         MatrixBehavior.createRoom(roomOpts).then((result) => {
           document.getElementById(this.appId).roomId =  this.currentRoomId = result.room_id
         })
@@ -128,10 +143,10 @@
 
       _currentRoomAlias(_) {
         if (!this.currentRoomId) return
-        room = client.getRoom(this.currentRoomId)
+        const room = client.getRoom(this.currentRoomId)
         // Room Creation only returns a room_id, so we should wait for the timeline event
         // to fill in the room name if it's not set yet.
-        if (room && room.name !== "Empty room") {
+        if (room && (room.name !== "Empty room")) {
           this.set('currentRoomAlias', room.name)
           this.roomName = ''
           this.aliasOrId = ''
