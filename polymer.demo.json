@@ -1,0 +1,17 @@
+{
+  "entrypoint": "interlocutor-demo-app.html",
+  "shell": "interlocutor-demo-app.html",
+  "fragments": [
+  ],
+  "sourceGlobs": [
+    "interlocutor-app.html",
+    "demo/interlocutor-demo-room-select.html",
+   "src/*",
+   "elements/*",
+   "bower.json"
+  ],
+  "includeDependencies": [
+    "bower_components/webcomponentsjs/webcomponents-lite.min.js"
+  ]
+}
+
