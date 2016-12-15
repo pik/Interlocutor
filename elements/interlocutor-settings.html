@@ -7,10 +7,10 @@
 <link rel="import" href="../bower_components/iron-overlay-behavior/iron-overlay-behavior.html">
 <link rel="import" href="../bower_components/paper-slider/paper-slider.html">
 
-<link rel="import" href="./poly-helper-behavior.html">
-<link rel="import" href="./matrix-behavior.html">
+<link rel="import" href="./interlocutor-helper-behavior.html">
+<link rel="import" href="./interlocutor-behavior.html">
 
-<dom-module id="matrix-settings">
+<dom-module id="interlocutor-settings">
   <template>
     <style is="custom-style">
       :host {
@@ -68,12 +68,12 @@
 
 <script>
   Polymer({
-    is: 'matrix-settings',
+    is: 'interlocutor-settings',
 
     behaviors: [
-      MatrixBehavior,
+      InterlocutorSdkBehavior,
       Polymer.IronOverlayBehavior,
-      PolyHelperBehavior,
+      InterlocutorHelperBehavior,
     ],
 
     observers: [

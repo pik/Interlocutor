@@ -4,9 +4,9 @@
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../bower_components/iron-overlay-behavior/iron-overlay-behavior.html">
 
-<link rel="import" href="./matrix-behavior.html">
+<link rel="import" href="./interlocutor-behavior.html">
 
-<dom-module id="matrix-login">
+<dom-module id="interlocutor-login">
   <template>
     <style>
       :host {
@@ -31,11 +31,11 @@
 
 <script>
   Polymer({
-    is: 'matrix-login',
+    is: 'interlocutor-login',
 
     behaviors: [
       Polymer.IronOverlayBehavior,
-      MatrixBehavior
+      InterlocutorSdkBehavior
     ],
 
     properties: {
@@ -49,11 +49,11 @@
     },
 
     attached() {
-      MatrixBehavior.foo = 5
+      InterlocutorSdkBehavior.foo = 5
     },
 
     login() {
-      MatrixBehavior.createClientAndLogin(this.$.username.value, this.$.password.value, this.homeServerAddress)
+      InterlocutorSdkBehavior.createClientAndLogin(this.$.username.value, this.$.password.value, this.homeServerAddress)
         .then((result) => {
           this.$.username.value = this.$.password.value = ''
           this.userId = result.user_id

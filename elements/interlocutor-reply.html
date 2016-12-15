@@ -5,9 +5,9 @@
 <link rel="import" href="../bower_components/iron-collapse/iron-collapse.html">
 <link rel="import" href="../bower_components/iron-overlay-behavior/iron-overlay-behavior.html">
 
-<link rel="import" href="./matrix-behavior.html">
+<link rel="import" href="./interlocutor-behavior.html">
 
-<dom-module id="matrix-reply">
+<dom-module id="interlocutor-reply">
   <template>
     <style>
       :host {
@@ -47,9 +47,9 @@
 <script>
   Polymer({
 
-    is: 'matrix-reply',
+    is: 'interlocutor-reply',
     behaviors: [
-      MatrixBehavior,
+      InterlocutorSdkBehavior,
       Polymer.IronOverlayBehavior
     ],
     properties: {

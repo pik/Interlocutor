@@ -3,7 +3,7 @@
 <link rel="import" href="../bower_components/vaadin-combo-box/vaadin-combo-box.html">
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
 
-<link rel="import" href="../elements/matrix-behavior.html">
+<link rel="import" href="../elements/interlocutor-sdk-behavior.html">
 
 <dom-module id="interlocutor-demo-room-select">
   <template>
@@ -55,7 +55,7 @@
       is: 'interlocutor-demo-room-select',
 
       behaviors: [
-        MatrixBehavior
+        InterlocutorSdkBehavior
       ],
       observers: [
         '_currentRoomAlias(currentRoomId)',
@@ -133,10 +133,10 @@
 
       createRoom() {
         if (this.roomName === '') return
-        const roomOpts = MatrixBehavior.defaultRoomOpts()
+        const roomOpts = InterlocutorSdkBehavior.defaultRoomOpts()
         roomOpts.name = this.roomName
         this.notify('Starting new discussion..')
-        MatrixBehavior.createRoom(roomOpts).then((result) => {
+        InterlocutorSdkBehavior.createRoom(roomOpts).then((result) => {
           document.getElementById(this.appId).roomId =  this.currentRoomId = result.room_id
         })
       },

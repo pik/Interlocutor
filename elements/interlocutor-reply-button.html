@@ -1,0 +1,45 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-input/paper-textarea.html">
+<link rel="import" href="../bower_components/iron-collapse/iron-collapse.html">
+<link rel="import" href="../bower_components/iron-overlay-behavior/iron-overlay-behavior.html">
+<link rel="import" href="./interlocutor-behavior.html">
+<!--
+`interlocutor-comment`
+Comment Element
+
+@demo demo/index.html
+-->
+
+<dom-module id="interlocutor-reply-button">
+  <template>
+    <style>
+    </style>
+    <template is="dom-if" if="[[canReply]]">
+      <paper-button class='comment-reply' on-tap="openReplyOverlay">[[reply]]</paper-button>
+    </template>
+    <interlocutor-reply id="reply" tabindex="-1" with-backdrop></interlocutor-reply>
+  </template>
+
+  <script>
+    Polymer({
+
+      is: 'interlocutor-reply-button',
+      properties: {
+        canReply: {
+          type: Boolean,
+          value: false
+        },
+        replyButtonText: {
+          type: String,
+          value: '[reply]'
+        },
+        targetId: {
+          type: String,
+          value: null
+        }
+      },
+    });
+  </script>
+</dom-module>

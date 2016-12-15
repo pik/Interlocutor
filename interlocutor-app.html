@@ -1,4 +1,4 @@
-<script src="./node_modules/matrix-js-sdk/dist/browser-matrix-dev.js"></script>
+<script src="./node_modules/interlocutor-js-sdk/dist/browser-interlocutor-dev.js"></script>
 <script src="./bower_components/moment/min/moment.min.js"></script>
 <script src="./src/scripts.js"></script>
 
@@ -10,11 +10,11 @@
 <link rel="import" href="./bower_components/paper-button/paper-button.html">
 
 <link rel="import" href="./elements/interlocutor-iron-icons.html">
-<link rel="import" href="./elements/matrix-comment.html">
-<link rel="import" href="./elements/matrix-login.html">
-<link rel="import" href="./elements/matrix-settings.html">
-<link rel="import" href="./elements/poly-helper-behavior.html">
-<link rel="import" href="./elements/matrix-behavior.html">
+<link rel="import" href="./elements/interlocutor-comment.html">
+<link rel="import" href="./elements/interlocutor-login.html">
+<link rel="import" href="./elements/interlocutor-settings.html">
+<link rel="import" href="./elements/interlocutor-helper-behavior.html">
+<link rel="import" href="./elements/interlocutor-sdk-behavior.html">
 
 <dom-module id="interlocutor-app">
   <template>
@@ -45,11 +45,11 @@
         <template is="dom-if" if="[[!userId]]">
           <paper-button on-tap="openLogin">Login</paper-button>
         </template>
-        <matrix-login id="login" tabindex="-1" with-backdrop user-id="{{userId}}" home-server-address="[[homeServerAddress]]"></matrix-login>
+        <interlocutor-login id="login" tabindex="-1" with-backdrop user-id="{{userId}}" home-server-address="[[homeServerAddress]]"></interlocutor-login>
       </span>
       <span class='settings-section' hidden="[[!clientReady]]">
         <paper-icon-button on-tap="openSettings" icon="settings"></paper-icon-button>
-        <matrix-settings id="settings" client-ready="[[clientReady]]" user-id="[[userId]]" default-settings="[[defaultSettings]]" tabindex="-1" with-backdrop></matrix-settings>
+        <interlocutor-settings id="settings" client-ready="[[clientReady]]" user-id="[[userId]]" default-settings="[[defaultSettings]]" tabindex="-1" with-backdrop></interlocutor-settings>
       </span>
     </div>
     <paper-toast id="toast" text="" vertical-align="top"></paper-toast>
@@ -58,9 +58,9 @@
         <paper-button on-tap="openReplyOverlay">Add Comment</paper-button>
       </template>
       <template is="dom-repeat" items="[[topLevelComments]]" as="comment">
-        <matrix-comment id="[[comment.event_id]]" comment="[[comment]]" state="[[state]]" user-id="[[userId]]" last-updated="[[lastUpdated]]"></matrix-comment>
+        <interlocutor-comment id="[[comment.event_id]]" comment="[[comment]]" state="[[state]]" user-id="[[userId]]" last-updated="[[lastUpdated]]"></interlocutor-comment>
       </template>
-      <matrix-reply id="reply" tab tabindex="-1" with-backdrop></matrix-reply>
+      <interlocutor-reply id="reply" tab tabindex="-1" with-backdrop></interlocutor-reply>
     </div>
   </template>
 
@@ -69,8 +69,8 @@
     is: 'interlocutor-app',
 
     behaviors: [
-      MatrixBehavior,
-      PolyHelperBehavior
+      InterlocutorSdkBehavior,
+      InterlocutorHelperBehavior
     ],
 
     listeners: {
