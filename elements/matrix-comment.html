@@ -343,7 +343,7 @@
       _children(_) {
         console.log('filtering _children')
         return this.dataChildren.filter((comment) => {
-          return comment.content.msgtype === 'm.comment' && this.permitted(comment)
+          return comment.content.msgtype === 'interlocutor.comment' && this.permitted(comment)
         })
       },
 

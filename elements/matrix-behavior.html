@@ -313,7 +313,7 @@
       }
       console.log('sendVoteComment', commentId, value)
       const content = {
-        msgtype: 'interlouctor.vote',
+        msgtype: 'interlocutor.vote',
         body: { target_id: commentId, value: value }
       }
       return this.sendMessage(room.roomId, content, client.txnId+=1)
