@@ -39,7 +39,7 @@
     </div>
     <div class="room-navigation">
       <div class="room-subnav">
-        <vaadin-combo-box label="Discussion Alias or Id" value="{{aliasOrId}}" minlength="2" auto-validate=true items="[[rooms]]"> </vaadin-combo-box >
+        <vaadin-combo-box label="Discussion Alias or Id" value="{{aliasOrId}}" allow-custom-value=true minlength="2" auto-validate=true items="[[rooms]]"> </vaadin-combo-box>
         <paper-button on-tap="joinRoom">join</paper-button>
       </div>
       <div class="room-subnav">
@@ -91,7 +91,9 @@
           type: Boolean
         }
       },
-
+      _valueChanged() {
+        debugger
+      },
       _setupRoomList(loggedIn) {
         if (!loggedIn) return
         client.on('sync', (syncState, oldState, data) => {
@@ -135,6 +137,7 @@
         if (this.roomName === '') return
         const roomOpts = InterlocutorSdkBehavior.defaultRoomOpts()
         roomOpts.name = this.roomName
+        roomOpts.room_alias_name = this.roomName
         this.notify('Starting new discussion..')
         InterlocutorSdkBehavior.createRoom(roomOpts).then((result) => {
           document.getElementById(this.appId).roomId =  this.currentRoomId = result.room_id
