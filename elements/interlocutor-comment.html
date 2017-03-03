@@ -46,6 +46,10 @@
         color: #FFD600;
       }
 
+      .comment-author-name {
+        cursor: pointer;
+      }
+
     </style>
     <div class='comment-row1-wrapper'>
       <div class='comment-body-wrapper collapse-comment'>
@@ -53,7 +57,7 @@
           <template is="dom-if" if="[[commentBodyOpen]]">
             <iron-image src="[[avatarUrl]]" style="width:1.8em; height:1.8em" sizing="contain" preload fade></iron-image>
           </template>
-          <span class='comment-author-name'>[[commentAuthor]]</span>
+          <span class='comment-author-name' on-tap="openAuthorProfile">[[commentAuthor]]</span>
           <span class='comment-posted-at'>&nbsp[[postedAt(comment.origin_server_ts, editedTimestamp)]]</span>
           <template is="dom-if" if="[[canUpVote]]">
             <paper-icon-button
@@ -109,7 +113,7 @@
       </div>
       <div class='comment-children'>
         <template is="dom-repeat" items="[[children]]" as="comment">
-          <interlocutor-comment id="[[comment.event_id]]" comment="[[comment]]" state="[[state]]" user-id="[[userId]]" last-updated="[[lastUpdated]]"></interlocutor-comment>
+          <interlocutor-comment id="[[comment.event_id]]" comment="[[comment]]" state="[[state]]" user-id="[[userId]]" settings-updated="[[settingsUpdated]]"></interlocutor-comment>
         </template>
       </div>
     </iron-collapse>
@@ -128,13 +132,15 @@
       listeners: {
         'cancel': 'toggleReply',
         'flags-updated': '_recomputeChildrenFromEvent',
-        'children-count-changed': '_recomputeChildrenCountFromEvent'
+        'children-count-changed': '_recomputeChildrenCountFromEvent',
+        'filtered-children-count-changed': '_recomputeChildrenCountFromEvent'
       },
 
       observers: [
         '_onFlagged(flagged.*)',
-        '_recomputeChildren(lastUpdated)',
-        '_childrenCount(children.*)'
+        '_recomputeChildren(settingsUpdated)',
+        '_recomputeChildrenCount(children.*)',
+        '_recomputeFilterdChildrenCount(children.*)'
       ],
 
       properties: {
@@ -161,6 +167,10 @@
         },
 
         childrenCount: {
+          type: Number,
+        },
+
+        filteredChildrenCount: {
           type: Number,
         },
 
@@ -241,7 +251,7 @@
         commentAuthor: {
           type: String,
           value: '',
-          computed: '_commentAuthor(lastUpdated)'
+          computed: '_commentAuthor(settingsUpdated)'
         },
 
         avatarUrl: {
@@ -257,15 +267,20 @@
         }
       },
 
+      openAuthorProfile() {
+        this.fire('open-author-profile', this.commentAuthor)
+      },
+
       _recomputeChildrenCountFromEvent(event, source) {
         if (source !== this) {
+          // console.log('_recomputeChildrenCountFromEvent', event)
           event.preventDefault()
-          this._childrenCount()
+          this._recomputeChildrenCount()
         }
       },
 
       // TODO Fix this spammy recompute
-      _childrenCount(force) {
+      _recomputeChildrenCount(force) {
         const count = this.children.reduce((prev, cur) => {
           return prev + (cur.childrenCount || 0)
         }, 1)
@@ -275,8 +290,28 @@
         }
       },
 
+      _recomputeFilterdChildrenCountFromEvent(event, source) {
+        if (source !== this) {
+          // console.log('_recomputeChildrenCountFromEvent', event)
+          event.preventDefault()
+          this._recomputeFilterdChildrenCount()
+        }
+      },
+
+      // TODO Axe this too
+      _recomputeFilterdChildrenCount(force) {
+        const count = this.dataChildren.reduce((prev, cur) => {
+          return prev + (this.permitted(cur) ? (cur.filteredChildrenCount || 0) : (cur.children.length) + 1)
+        }, 0)
+        if (this.filteredChildrenCount !== count || force) {
+          this.comment.filteredChildrenCount = this.filteredChildrenCount = count
+          this.fire('filtered-children-count-changed', this, { cancellable: true })
+        }
+      },
+
       attached() {
-        this._childrenCount(true)
+        this._recomputeChildrenCount(true)
+        this._recomputeFilterdChildrenCount(true)
         this.comment.children.addListener(this, 'dataChildren')
       },
 
@@ -285,13 +320,14 @@
       },
 
       _recomputeChildren(_) {
+        // Because Polymer has no hard recompute
         this._pathEffector('dataChildren.*', this.dataChildren)
       },
 
       _recomputeChildrenFromEvent(event, source) {
         // Because fire goes to back to itself by default...
         if (source !== this) {
-          console.log('_recomputeChildrenFromEvent')
+          // console.log('_recomputeChildrenFromEvent', this)
           event.preventDefault()
           // Because Polymer has no hard recompute
           this._pathEffector('dataChildren.*', this.dataChildren)
@@ -299,6 +335,7 @@
       },
 
       _onFlagged() {
+        console.log('firing flags-updated', this)
         this.fire('flags-updated', this, { cancellable: true })
       },
 
@@ -316,6 +353,8 @@
       },
 
       _isFlagged(_) {
+        // Note this is recomputed any time children are filtered since the comment object which
+        // holds the data state is re-attached to a newly created album.
         return !!this.flagged[this.userId]
       },
 

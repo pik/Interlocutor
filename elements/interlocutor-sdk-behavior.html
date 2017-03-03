@@ -162,6 +162,13 @@
     },
 
     addEvent (event) {
+    // TODO: Find out why I'm receiving duplicate events so I don't have to guard
+      if (this.state[event.event_id]) {
+        console.log('Received duplicate comment event - returning..', event.user_id || event.sender, event.event_id, event.content.msgtype, event.content.body)
+        return
+      } else {
+        this.state[event.event_id] = event
+      }
       event.flags = new Set()
       event.votes = new Set()
       event.score = 1
@@ -173,9 +180,8 @@
       const targetId = event.content.body.target_id || room.roomId
       // Need to use Polymer Push for NotifyPath
       // I hate breaking separation of concerns like this
+      // TODO: switch to using a SET()
       this.state[targetId].children.push(event)
-      this.state[event.event_id] = event
-      this.lastUpdated = event.origin_server_ts
     },
 
     processEvent (event) {
@@ -243,7 +249,6 @@
               element.notifyPath('comment.editedTimestamp', target.editedTimestamp)
             }
       }
-      // this.lastUpdated = event.origin_server_ts
       return true
       }
     },

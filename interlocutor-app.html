@@ -13,6 +13,7 @@
 <link rel="import" href="./elements/interlocutor-comment.html">
 <link rel="import" href="./elements/interlocutor-login.html">
 <link rel="import" href="./elements/interlocutor-settings.html">
+<!-- <link rel="import" href="./elements/interlocutor-author-profile.html"> -->
 <link rel="import" href="./elements/interlocutor-helper-behavior.html">
 <link rel="import" href="./elements/interlocutor-sdk-behavior.html">
 
@@ -50,7 +51,9 @@
       <span class='settings-section' hidden="[[!clientReady]]">
         <paper-icon-button on-tap="openSettings" icon="settings"></paper-icon-button>
         <interlocutor-settings id="settings" client-ready="[[clientReady]]" user-id="[[userId]]" default-settings="[[defaultSettings]]" tabindex="-1" with-backdrop></interlocutor-settings>
+        [[_filteredChildrenCountStatement(filteredChildrenCount)]]
       </span>
+      <!-- <interlocutor-author-profile id="authorProfile"></interlocutor-author-profile> -->
     </div>
     <paper-toast id="toast" text="" vertical-align="top"></paper-toast>
     <div class='comment-section' hidden="[[!clientReady]]">
@@ -58,7 +61,7 @@
         <paper-button on-tap="openReplyOverlay">Add Comment</paper-button>
       </template>
       <template is="dom-repeat" items="[[topLevelComments]]" as="comment">
-        <interlocutor-comment id="[[comment.event_id]]" comment="[[comment]]" state="[[state]]" user-id="[[userId]]" last-updated="[[lastUpdated]]"></interlocutor-comment>
+        <interlocutor-comment id="[[comment.event_id]]" comment="[[comment]]" state="[[state]]" user-id="[[userId]]" settings-updated="[[settingsUpdated]]"></interlocutor-comment>
       </template>
       <interlocutor-reply id="reply" tab tabindex="-1" with-backdrop></interlocutor-reply>
     </div>
@@ -75,8 +78,10 @@
 
     listeners: {
       'notify': 'notify',
-      'settings-updated': '_touchLastUpdated',
-      'logged-in': 'onLoggedIn'
+      'settings-updated': '_touchSettingsUpdated',
+      'logged-in': 'onLoggedIn',
+      'filtered-children-count-changed': '_recomputeFilteredChildrenCountFromEvent',
+      'open-author-profile': 'openAuthorProfile'
     },
 
     observers: [
@@ -133,7 +138,12 @@
       topLevelComments: {
         type: Array,
         value: function() { return [] },
-        computed: '_topLevelComments(dataTopLevelComments.*, lastUpdated)'
+        computed: '_topLevelComments(dataTopLevelComments.*, settingsUpdated)'
+      },
+
+      filteredChildrenCount: {
+        type: Number,
+        value: 0,
       },
 
       user: {
@@ -146,7 +156,7 @@
         value: null,
       },
 
-      lastUpdated: {
+      settingsUpdated: {
         type: Number,
         value: null,
         notify: true
@@ -173,6 +183,26 @@
       })
     },
 
+    openAuthorProfile() {
+      this.$.authorProfile.open()
+    },
+
+    _recomputeFilteredChildrenCountFromEvent(event, source) {
+      event.preventDefault()
+      this.filteredChildrenCount = this.dataTopLevelComments.reduce((prev, cur) => {
+          return prev + (this.permitted(cur) ? (cur.filteredChildrenCount || 0) : (cur.children.length) + 1)
+        }, 0)
+    },
+
+    _filteredChildrenCountStatement(filteredCommentsCount) {
+      if (filteredCommentsCount == 1) {
+        return "1 Comment hidden by filters."
+      } else if (filteredCommentsCount > 1) {
+        return `${filteredCommentsCount} Comments hidden by filters.`
+      }
+      return ""
+    },
+
     initializeRoom(roomId) {
       if (!roomId) return
       // debbounce if client is not loggedIn yet
@@ -184,7 +214,7 @@
       if (!this.room) {
         return this.debounce('initialize-room', this.initializeRoom.bind(this), 300)
       }
-      this.state[this.roomId] = { children: [] }
+      this.state[this.roomId] = { children: new NotifyArray() }
       this.initializeComments()
     },
 
@@ -219,11 +249,11 @@
       return dataTopLevelComments && dataTopLevelComments.length || !clientReady
     },
 
-    _touchLastUpdated() {
+    _touchSettingsUpdated() {
       // TODO switch to _pathEffector
       // Really should be public API for forcing re-computes in Polymer..
-      console.log('_touchLastUpdated')
-      this.lastUpdated += 0.1
+      console.log('_touchSettingsUpdated')
+      this.settingsUpdated += 0.1
     },
 
     _topLevelComments() {
