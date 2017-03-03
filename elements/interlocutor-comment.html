@@ -340,7 +340,7 @@
       },
 
       _avatarUrl(author_id) {
-        return author_id ? client.getUser(author_id).avatarUrl : ''
+        return author_id ? client.mxcUrlToHttp(client.getUser(author_id).avatarUrl) : ''
       },
 
       _commentAuthor() {
