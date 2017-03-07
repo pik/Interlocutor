@@ -39,6 +39,14 @@
         height: 2em;
       }
 
+      .moderator-settings {
+        margin-top: 2em;
+      }
+
+      .ignore-settings {
+        margin-top: 2em;
+      }
+
     </style>
     <div class='close-wrapper'>
       <paper-icon-button class='close-button' icon="exit-to-app" on-tap="close"></paper-icon-button>
@@ -56,14 +64,25 @@
       <paper-slider id="flagKillThreshold" min="0" max="100" value="{{settings.flagKillThreshold}}" disabled$="[[!filterOn]]" editable></paper-slider>
       <div>Auto-collapse below vote threshold: </div>
       <paper-slider id="voteCollapseThreshold" min="-200" max="200" value="{{settings.voteCollapseThreshold}}" disabled$="[[!filterOn]]" editable></paper-slider>
-      <div> Moderator Identities: </div>
-      <div class="moderator-list" class$="[[_classBinding(filterOn, 'on')]]">
-        <template is="dom-repeat" items="[[trustedIdentities]]" as="identity">
-          <p> [[identity]]<paper-icon-button icon="remove-circle" on-tap='removeIdentity' value="[[identity]]"></paper-icon-button>
-        </template></p>
+      <div class='moderator-settings'>
+        <span> Moderator Identities: </span>
+        <div class="moderator-list" class$="[[_classBinding(filterOn, 'on')]]">
+          <template is="dom-repeat" items="[[trustedIdentities]]" as="identity">
+            <span> [[identity]]<paper-icon-button icon="remove-circle" on-tap='removeTrustedIdentity' value="[[identity]]"></paper-icon-button> </span>
+          </template>
+        </div>
+        <paper-input value='{{newTrustedIdentity}}' label="Add a User as Moderator." on-keydown="addTrustedIdentity"></paper-input>
+      </div>
+      <div class='ignore-settings'>
+        <span> Ignored Users: </span>
+        <div class='ignored-list' class$="[[_classBinding(filterOn, 'on')]]">
+          <template is="dom-repeat" items="[[ignoredIdentities]]" as="identity">
+            <p> [[identity]]<paper-icon-button icon="remove-circle" on-tap='removeIgnoredIdentity' value="[[identity]]"></paper-icon-button>
+          </template>
+        </div>
+        <paper-input value='{{newIgnoredIdentity}}' label="Add a User to the Ignore List." on-keydown="addIgnoredIdentity"></paper-input>
       </div>
     </div>
-    <paper-input value='{{newIdentity}}' label="Add trusted identities" on-keydown="identityInput"></paper-input>
   </template>
 
 <script>
@@ -123,11 +142,25 @@
         computed: '_objectKeys(settings.trustedIdentities.*)'
       },
 
+      ignoredIdentities: {
+        type: Array,
+        value: function() {
+          return []
+        },
+        computed: '_objectKeys(settings.ignoredIdentities.*)'
+      },
+
       userId: {
         type: String,
       },
 
-      newIdentity: {
+      newTrustedIdentity: {
+        type: String,
+        value: '',
+        notify: true
+      },
+
+      newIgnoredIdentity: {
         type: String,
         value: '',
         notify: true
@@ -152,17 +185,30 @@
       }
     },
 
-    identityInput(e) {
+    addTrustedIdentity(e) {
       if (e.keyCode == 13) {
-        this.set('settings.trustedIdentities.' + this.newIdentity, {})
-        this.newIdentity = ''
+        this.set('settings.trustedIdentities.' + e.target.value, {})
+        this.newTrustedIdentity = ''
       }
     },
 
-    removeIdentity(event) {
+    addIgnoredIdentity(e) {
+      if (e.keyCode == 13) {
+        this.set('settings.ignoredIdentities.' + e.target.value, {})
+        this.newIgnoredIdentity = ''
+      }
+    },
+
+    removeTrustedIdentity(event) {
       const identity = event.currentTarget.value
       delete this.settings.trustedIdentities[identity]
       this._pathEffector('settings.trustedIdentities.' + identity)
+    },
+
+    removeIgnoredIdentity(event) {
+      const identity = event.currentTarget.value
+      delete this.settings.ignoredIdentities[identity]
+      this._pathEffector('settings.ignoredIdentities.' + identity)
     },
 
     settingsIsDirty() {
@@ -198,8 +244,20 @@
           this.set('customSettings', result.tags.settings)
           this.set('activeSettingsProfile', 'customSettings')
           this.set('settings', settings)
+          // If additional keys have been added to defaultSettings that aren't in saved profile
+          // ensure that they are set to defaults
+          _ensureAllSettingsKeysPresent()
         }
       })
+    },
+
+    _ensureAllSettingsKeysPresent() {
+      const defaultSettings = this.defaultSettings
+      for (let key in defaultSettings) {
+        if (this.settings[key] === undefined) {
+          this.set('settings.' + key, defaultSettings[key])
+        }
+      }
     },
 
     toggle(_) {
