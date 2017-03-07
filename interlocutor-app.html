@@ -81,7 +81,8 @@
       'settings-updated': '_touchSettingsUpdated',
       'logged-in': 'onLoggedIn',
       'filtered-children-count-changed': '_recomputeFilteredChildrenCountFromEvent',
-      'open-author-profile': 'openAuthorProfile'
+      'open-author-profile': 'openAuthorProfile',
+      'ignore-user': '_ignoreUser'
     },
 
     observers: [
@@ -185,6 +186,10 @@
 
     openAuthorProfile() {
       this.$.authorProfile.open()
+    },
+
+    _ignoreUser(event, target) {
+      this.$.settings.addIgnoredIdentity(target)
     },
 
     _recomputeFilteredChildrenCountFromEvent(event, source) {

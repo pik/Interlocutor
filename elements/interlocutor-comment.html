@@ -1,6 +1,7 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-menu-button/paper-menu-button.html">
 <link rel="import" href="../bower_components/iron-collapse/iron-collapse.html">
 <link rel="import" href="../bower_components/iron-image/iron-image.html">
 
@@ -57,7 +58,13 @@
           <template is="dom-if" if="[[commentBodyOpen]]">
             <iron-image src="[[avatarUrl]]" style="width:1.8em; height:1.8em" sizing="contain" preload fade></iron-image>
           </template>
-          <span class='comment-author-name' on-tap="openAuthorProfile">[[commentAuthor]]</span>
+          <paper-menu-button id='userMenuButton'>
+              <span class='comment-author-name dropdown-trigger'>[[commentAuthor]]</span>
+            <paper-menu id='userMenu' class="dropdown-content">
+              <paper-item on-tap="_closeUserMenu"><a href=[[_contactUserURL(commentAuthor)]] rel="noopener noreferrer" target="_blank"> Contact </a></paper-item>
+              <paper-item on-tap="_ignoreUser">Ignore</paper-item>
+            </paper-menu>
+          </paper-menu-button>
           <span class='comment-posted-at'>&nbsp[[postedAt(comment.origin_server_ts, editedTimestamp)]]</span>
           <template is="dom-if" if="[[canUpVote]]">
             <paper-icon-button
@@ -267,8 +274,17 @@
         }
       },
 
-      openAuthorProfile() {
-        this.fire('open-author-profile', this.commentAuthor)
+      _contactUserURL(userName) {
+        return `https://matrix.to/#/${userName}`
+      },
+
+      _ignoreUser(event) {
+        this.fire('ignore-user', this.commentAuthor)
+        this._closeUserMenu()
+      },
+
+      _closeUserMenu(event) {
+        this.$.userMenuButton.close()
       },
 
       _recomputeChildrenCountFromEvent(event, source) {

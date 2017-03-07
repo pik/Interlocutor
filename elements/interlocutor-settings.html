@@ -61,9 +61,9 @@
         </paper-listbox>
       </paper-dropdown-menu>
       <div>Flag Kill threshold: </div>
-      <paper-slider id="flagKillThreshold" min="0" max="100" value="{{settings.flagKillThreshold}}" disabled$="[[!filterOn]]" editable></paper-slider>
+      <paper-slider id="flagKillThreshold" min="0" max="100" value={{settings.flagKillThreshold}} disabled$="[[!filterOn]]" editable></paper-slider>
       <div>Auto-collapse below vote threshold: </div>
-      <paper-slider id="voteCollapseThreshold" min="-200" max="200" value="{{settings.voteCollapseThreshold}}" disabled$="[[!filterOn]]" editable></paper-slider>
+      <paper-slider id="voteCollapseThreshold" min="-200" max="200" value={{settings.voteCollapseThreshold}} disabled$="[[!filterOn]]" editable></paper-slider>
       <div class='moderator-settings'>
         <span> Moderator Identities: </span>
         <div class="moderator-list" class$="[[_classBinding(filterOn, 'on')]]">
@@ -71,7 +71,7 @@
             <span> [[identity]]<paper-icon-button icon="remove-circle" on-tap='removeTrustedIdentity' value="[[identity]]"></paper-icon-button> </span>
           </template>
         </div>
-        <paper-input value='{{newTrustedIdentity}}' label="Add a User as Moderator." on-keydown="addTrustedIdentity"></paper-input>
+        <paper-input value='{{newTrustedIdentity}}' label="Add a User as Moderator." on-keydown="addTrustedIdentityFromInput"></paper-input>
       </div>
       <div class='ignore-settings'>
         <span> Ignored Users: </span>
@@ -80,7 +80,7 @@
             <p> [[identity]]<paper-icon-button icon="remove-circle" on-tap='removeIgnoredIdentity' value="[[identity]]"></paper-icon-button>
           </template>
         </div>
-        <paper-input value='{{newIgnoredIdentity}}' label="Add a User to the Ignore List." on-keydown="addIgnoredIdentity"></paper-input>
+        <paper-input value='{{newIgnoredIdentity}}' label="Add a User to the Ignore List." on-keydown="addIgnoredIdentityFromInput"></paper-input>
       </div>
     </div>
   </template>
@@ -102,7 +102,8 @@
     ],
 
     listeners: {
-      'iron-select': '_settingsProfileChanged'
+      'iron-select': '_settingsProfileChanged',
+      'ignore-user': 'addIgnoredIdentityFromEvent'
     },
 
     properties: {
@@ -180,23 +181,27 @@
     _settingsFromDefaults(defaultSettings) {
       if (defaultSettings && this.activeSettingsProfile === null) {
         this.activeSettingsProfile = 'defaultSettings'
-        window.settings = this.settings
         this.set('settings', deepCopy(defaultSettings))
+        window.settings = this.settings
       }
     },
 
-    addTrustedIdentity(e) {
+    addTrustedIdentityFromInput(e) {
       if (e.keyCode == 13) {
         this.set('settings.trustedIdentities.' + e.target.value, {})
         this.newTrustedIdentity = ''
       }
     },
 
-    addIgnoredIdentity(e) {
+    addIgnoredIdentityFromInput(e) {
       if (e.keyCode == 13) {
-        this.set('settings.ignoredIdentities.' + e.target.value, {})
+        this.addIgnoredIdentity(e.target.value)
         this.newIgnoredIdentity = ''
       }
+    },
+
+    addIgnoredIdentity(target) {
+      this.set('settings.ignoredIdentities.' + target, {})
     },
 
     removeTrustedIdentity(event) {
