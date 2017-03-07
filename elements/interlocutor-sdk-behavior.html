@@ -117,20 +117,21 @@
     permitted (comment) {
       const settings = document.getElementById('settings').settings
       if (!settings.filterOn) return true
+      const sender = comment.user_id || comment.sender
+      // If the user is in the ignore list gib it right away
+      if (settings.ignoredIdentities[sender]) return false
       const flagged = comment.flagged
       let flagCount = 0
       const trustedIdentities = settings.trustedIdentities
       let instaGib = false
       for (let userName in flagged) {
         if (flagged[userName]) {
-          if (trustedIdentities[userName]) {
-            instaGib = true
-            break
-          }
+          // If the comment was flagged by a moderator identity gib it right away
+          if (trustedIdentities[userName]) return false
           flagCount += 1
         }
       }
-      return (!instaGib && flagCount < settings.flagKillThreshold)
+      return (flagCount < settings.flagKillThreshold)
     },
 
     createClientAndLogin(username, password, homeServerAddress) {
