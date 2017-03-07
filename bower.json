@@ -10,7 +10,8 @@
     "moment": "^2.14.1",
     "paper-dialog": "^1.1.0",
     "paper-toast": "git@github.com:pik/paper-toast.git#vertical-align-transition",
-    "vaadin-combo-box": "^1.1.5"
+    "vaadin-combo-box": "^1.1.5",
+    "paper-slider": "git://github.com/pik/paper-slider.git#always-numeric"
   },
   "devDependencies": {
     "iron-component-page": "PolymerElements/iron-component-page#^1.0.0",
