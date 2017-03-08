@@ -355,8 +355,17 @@
         this.fire('flags-updated', this, { cancellable: true })
       },
 
-      _avatarUrl(author_id) {
-        return author_id ? client.mxcUrlToHttp(client.getUser(author_id).avatarUrl) : ''
+      _avatarUrl(commentAuthor) {
+        if (commentAuthor) {
+          const user = client.getUser(commentAuthor)
+          if (user) {
+            return client.mxcUrlToHttp(user.avatarUrl)
+          } else {
+            // The client has fetched the comment but has not yet fetched userState - try again soon
+            this.debounce('get-avatar-url', () => { this._pathEffector('commentAuthor', commentAuthor) }, 2250)
+          }
+        }
+        return ''
       },
 
       _commentAuthor() {
