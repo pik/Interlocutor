@@ -15,9 +15,9 @@
     <interlocutor-app
       logged-in="{{loggedIn}}"
       id='interlocutorApp'
-      default-login="interlocutorTest1"
-      default-password="18404081b72e2630"
-      home-server-address="https://matrix.amaznev.net:8448">
+      default-login=[[appUser]]
+      default-password=[[appPassword]]
+      home-server-address=[[homeServerAddress]]>
     </interlocutor-app>
   </template>
 
@@ -29,7 +29,20 @@
       loggedIn: {
         type: Boolean,
         default: false,
-      }
+        notify: true
+      },
+      homeServerAddress: {
+        type: String,
+        default: '',
+      },
+      appUser: {
+        type: String,
+        default: '',
+      },
+      appPassword: {
+        type: String,
+        default: '',
+      },
     }
 
   })
