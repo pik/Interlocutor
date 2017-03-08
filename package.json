@@ -1,9 +1,11 @@
 {
-  "name": "interlocutor",
+  "name": "Interlocutor",
   "version": "0.0.1",
   "description": "",
-  "directories": {
-    "test": "test"
+  "scripts": {
+    "lint": "eslint . --ext js,html --ignore-path .gitignore",
+    "test": "npm run lint && polymer test",
+    "build": "gulp build"
   },
   "dependencies": {
     "matrix-js-sdk": "git+https://git@github.com/pik/matrix-js-sdk.git"
@@ -30,11 +32,10 @@
     "iron-icon-extractor": "git+https://github.com/pik/iron-icon-extractor.git",
     "merge-stream": "^1.0.0",
     "plylog": "^0.4.0",
-    "polymer-build": "^0.4.1"
+    "polymer-build": "^0.8.4"
   },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "author": {
+    "email": "alexander.maznev@gmail.com"
   },
-  "author": "",
   "license": "MIT"
 }
