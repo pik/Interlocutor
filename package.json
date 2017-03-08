@@ -6,7 +6,7 @@
     "test": "test"
   },
   "dependencies": {
-    "matrix-js-sdk": "git+ssh://git@github.com/pik/matrix-js-sdk.git"
+    "matrix-js-sdk": "git+https://git@github.com/pik/matrix-js-sdk.git"
   },
   "devDependencies": {
     "autoprefixer": "^6.5.1",
@@ -16,7 +16,7 @@
     "es6-promise": "^3.2.1",
     "eslint": "^3.8.1",
     "eslint-plugin-html": "^1.5.5",
-    "gulp": "gulpjs/gulp#4.0",
+    "gulp": "github:gulpjs/gulp#4.0",
     "gulp-autoprefixer": "^3.1.1",
     "gulp-babel": "^6.1.2",
     "gulp-crisper": "^1.1.0",
