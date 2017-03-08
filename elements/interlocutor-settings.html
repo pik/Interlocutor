@@ -173,7 +173,11 @@
         const newProfileName = event.detail.item.attributes.name.value
         if (this.activeSettingsProfile != newProfileName) {
           this.activeSettingsProfile = newProfileName
+          if (!this[newProfileName]) {
+            this[newProfileName] = deepCopy(this.settings)
+          }
           this.set('settings', this[newProfileName])
+          window.settings = this.settings
         }
       }
     },

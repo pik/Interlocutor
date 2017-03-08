@@ -1,38 +1,40 @@
 <script>
-var InterlocutorHelperBehavior = {
-  _eql(prop1, prop2) {
-    return prop1 === prop2
-  },
+    // @polymerBehavior InterlocutorHelperBehavior
 
-  _classBinding(condition, trueClass, falseClass) {
-    return condition ? (trueClass || '') : (falseClass || '')
-  },
+  const InterlocutorHelperBehavior = {
+    _eql(prop1, prop2) {
+      return prop1 === prop2
+    },
 
-  _classBindingEql(property, condition, trueClass, falseClass) {
-    if (condition === property) {
-      return trueClass
-    } else {
-      return falseClass || ""
+    _classBinding(condition, trueClass, falseClass) {
+      return condition ? (trueClass || '') : (falseClass || '')
+    },
+
+    _classBindingEql(property, condition, trueClass, falseClass) {
+      if (condition === property) {
+        return trueClass
+      } else {
+        return falseClass || ""
+      }
+    },
+
+    _count(changes) {
+      return changes.base ? changes.base.length : 0
+    },
+
+    _alias(target, defaultVal) {
+      if (defaultVal === '{}') defaultVal = {}
+      else if (defaultVal === '[]') defaultVal = []
+
+      if (target !== undefined) {
+        return target
+      }
+      return defaultVal
+    },
+
+    _objectKeys(changes) {
+      return changes && changes.base ? Object.keys(changes.base) : []
     }
-  },
 
-  _count(changes) {
-    return changes.base ? changes.base.length : 0
-  },
-
-  _alias(target, defaultVal) {
-    if (defaultVal === '{}') defaultVal = {}
-    else if (defaultVal === '[]') defaultVal = []
-
-    if (target !== undefined) {
-      return target
-    }
-    return defaultVal
-  },
-
-  _objectKeys(changes) {
-    return changes && changes.base ? Object.keys(changes.base) : []
   }
-
-}
 </script>
