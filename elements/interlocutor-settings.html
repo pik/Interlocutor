@@ -247,24 +247,24 @@
       }
       this.loadUserSettings().then((result) => {
         if (result.tags && result.tags.settings) {
-          console.log('loading User Settings..')
-          window.settings = result.tags.settings
-          // TODO merge update into defaults
-          this.set('customSettings', result.tags.settings)
-          this.set('activeSettingsProfile', 'customSettings')
-          this.set('settings', settings)
+          // console.log('switching to Custom User Settings..')
+          const settings = result.tags.settings
           // If additional keys have been added to defaultSettings that aren't in saved profile
           // ensure that they are set to defaults
-          _ensureAllSettingsKeysPresent()
+          this._ensureAllSettingsKeysPresent(settings)
+          this.set('customSettings', settings)
+          this.set('activeSettingsProfile', 'customSettings')
+          this.set('settings', settings)
+          window.settings = this.settings
         }
       })
     },
 
-    _ensureAllSettingsKeysPresent() {
+    _ensureAllSettingsKeysPresent(settings) {
       const defaultSettings = this.defaultSettings
       for (let key in defaultSettings) {
-        if (this.settings[key] === undefined) {
-          this.set('settings.' + key, defaultSettings[key])
+        if (settings[key] === undefined) {
+          settings[key] = defaultSettings[key]
         }
       }
     },
