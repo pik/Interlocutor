@@ -32,7 +32,7 @@
     "iron-icon-extractor": "git+https://github.com/pik/iron-icon-extractor.git",
     "merge-stream": "^1.0.0",
     "plylog": "^0.4.0",
-    "polymer-build": "^0.8.4"
+    "polymer-build": "^0.4.1"
   },
   "author": {
     "email": "alexander.maznev@gmail.com"
