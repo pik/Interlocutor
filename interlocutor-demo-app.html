@@ -5,9 +5,15 @@
 <dom-module id="interlocutor-demo-app">
   <template>
     <style>
+      h2 {
+        text-align: center;
+      }
+      h4 {
+        text-align: center;
+      }
     </style>
-    <h2 style="text-align: center">Interlocutor Demo</h2>
-
+    <h2>Interlocutor Demo</h2>
+    <h4>Connected to [[homeServerAddress]]</h4>
     <interlocutor-demo-room-select
       app-id='interlocutorApp'
       logged-in="{{loggedIn}}">
