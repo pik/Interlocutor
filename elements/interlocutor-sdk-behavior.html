@@ -157,43 +157,65 @@
           flagCount += 1
         }
       }
-      return (flagCount < settings.flagKillThreshold)
+      return (flagCount < settings.flagKillThreshold
+
+        )
+
     },
 
-    createClientAndLogin(username, password, homeServerAddress) {
-      window.client = matrixcs.createClient(homeServerAddress)
-      client.txnId = 0
-      const _login = function () {
-          return client.loginWithPassword(username, password).then((result) => {
+    createClientAndLogin(username, password, homeServerAddress, logout) {
+      if (!window.client) {
+        window.client = matrixcs.createClient(homeServerAddress)
+        client.txnId = 0
+      }
+
+      if (logout) {
+        client.stopClient()
+        client.logout().then((success) => {
+            this.createClientAndLogin(username, password, homeServerAddress, false)
+          }, (err) => {
+            console.log(err)
+          })
+      }
+
+      // client.on("Room.timeline", (matrixEvent, room, toStartOfTimeline) => {
+      //   const event = matrixEvent.event
+      //   console.log('received Room.timeline event', event.event_id, event.type, room.room_id)
+      //   this.processEvent(event)
+      // })
+      if (!username && !password) {
+        return client.registerGuest().then((result) => {
+            client._http.opts.accessToken = result.access_token
+            client._isGuest = true
+            return result
+          })
+      } else {
+        return client.loginWithPassword(username, password).then((result) => {
+            client._isGuest = false
             client.credentials.userId = result.user_id
             client._http.opts.accessToken  = result.access_token
             return result
-        })
-      }
-
-      let promise
-      if (client.credentials.userId) {
-        client.stopClient()
-        promise = client.logout().then(_login, (err) => {
+        }).then((result)=> {
+          client.startClient({ pendingEventOrdering: 'detached' })
+          return result
+        }, (err) => {
           console.log(err)
         })
-      } else {
-        promise = _login()
       }
-
-      return promise.then((result)=> {
-        client.startClient({ pendingEventOrdering: 'detached' })
-        return result
-      }, (err) => {
-        console.log(err)
-      })
     },
 
     addEvent (event) {
-    // TODO: Find out why I'm receiving duplicate events so I don't have to guard
+      // In the future let's raise if a top-level comment doesn't supply
+      // roomId, rather than defaulting.
+      const targetId = event.content.body.target_id || roomId
+      // TODO: Find out why I'm receiving duplicate events so I don't have to guard
       if (this.state[event.event_id]) {
         console.log('Received duplicate comment event - returning..', event.user_id || event.sender, event.event_id, event.content.msgtype, event.content.body)
         return
+      } else if (this.state[targetId] == undefined) {
+        // TODO Matrix-JS-SDK addEventsToTimeline will allow on the "on" event function
+        // to bubble and error out
+        return console.log('Failed to find parent comment with id: ', targetId)
       } else {
         this.state[event.event_id] = event
       }
@@ -203,9 +225,6 @@
       event.flagged = {}
       event.voted = {}
       event.children = new NotifyArray()
-      // In the future let's raise if a top-level comment doesn't supply
-      // roomId, rather than defaulting.
-      const targetId = event.content.body.target_id || room.roomId
       // Need to use Polymer Push for NotifyPath
       // I hate breaking separation of concerns like this
       // TODO: switch to using a SET()
@@ -223,7 +242,7 @@
       } else {
         target = this.state[content.body.target_id]
         if (!target) {
-          return console.log('illegal event', event)
+          return console.log(`Failed to find target with id: ${content.body.target_id}: for: ${content.msgtype}`)
         }
         // switch() isn't closured by default
         let element
@@ -284,16 +303,20 @@
     buildInitialRoomState (roomId) {
       console.log('Building initial comment-tree state..')
       const limit = 1000
-      return client.roomInitialSync(roomId, limit).then((result) => {
-        const events = result.messages.chunk.sort((e1, e2) => {
-          return e1.origin_server_ts - e2.origin_server_ts
+      if (client.isGuest()) {
+        return client.peekInRoom(roomId, limit)
+      } else {
+        return client.roomInitialSync(roomId, limit).then((result) => {
+          const events = result.messages.chunk.sort((e1, e2) => {
+            return e1.origin_server_ts - e2.origin_server_ts
+          })
+          for (let event of events) {
+            // All Interloctur events are of type 'm.room.comment'
+            if (event.type !== 'm.room.comment') continue
+            this.processEvent(event)
+          }
         })
-        for (let event of events) {
-          // All Interloctur events are of type 'm.room.comment'
-          if (event.type !== 'm.room.comment') continue
-          this.processEvent(event)
-        }
-      })
+      }
     },
 
     sendMessage(roomId, content, txnId) {
@@ -315,7 +338,7 @@
         msgtype: 'interlocutor.comment',
         body: { text: text, target_id: commentId }
       }
-      return this.sendMessage(room.roomId, content, (client.txnId+=1))
+      return this.sendMessage(roomId, content, (client.txnId+=1))
     },
 
     /**
@@ -330,7 +353,7 @@
         msgtype: 'interlocutor.edit',
         body: { target_id: commentId, text: text }
       }
-      return this.sendMessage(room.roomId, content, (client.txnId+=1))
+      return this.sendMessage(roomId, content, (client.txnId+=1))
     },
 
     /**
@@ -344,12 +367,12 @@
       if ([-1, 0, 1].indexOf(value) === -1) {
         throw 'IllegalVote'
       }
-      console.log('sendVoteComment', commentId, value)
+      console.log('sendVote', commentId, value)
       const content = {
         msgtype: 'interlocutor.vote',
         body: { target_id: commentId, value: value }
       }
-      return this.sendMessage(room.roomId, content, client.txnId+=1)
+      return this.sendMessage(roomId, content, client.txnId+=1)
     },
 
 
@@ -361,21 +384,21 @@
      * @return {module:http-api.MatrixError} Rejects: with an error response.
      */
     sendFlagComment (commentId, value) {
-      console.log('sendFlagComment', commentId, value)
+      console.log('sendFlag', commentId, value)
       const content = {
         msgtype: 'interlocutor.flag',
         body: { target_id: commentId, value: value}
       }
-      return this.sendMessage(room.roomId, content, client.txnId+=1)
+      return this.sendMessage(roomId, content, client.txnId+=1)
     },
 
     saveUserSettings(settings) {
       console.log("saveUserSettings", settings)
-      return client.setRoomTag(room.roomId, 'settings', settings)
+      return client.setRoomTag(roomId, 'settings', settings)
     },
 
     loadUserSettings() {
-      return client.getRoomTags(room.roomId)
+      return client.getRoomTags(roomId)
     }
   }
 </script>

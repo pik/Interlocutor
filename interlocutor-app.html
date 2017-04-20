@@ -106,23 +106,15 @@
         type: String,
       },
 
-      defaultLogin: {
-        type: String,
-      },
-
-      defaultPassword: {
-        type: String,
-      },
-
       roomId: {
         type: String,
         value: null,
       },
 
-      room: {
-        type: Object,
-        value: null
-      },
+      // room: {
+      //   type: Object,
+      //   value: null
+      // },
 
       state: {
         type: Object,
@@ -189,7 +181,7 @@
     },
 
     initializeClient() {
-      this.createClientAndLogin(this.defaultLogin, this.defaultPassword, this.homeServerAddress).then((success) => {
+      this.createClientAndLogin(null, null, this.homeServerAddress).then((success) => {
         this.loggedIn = true
       })
     },
@@ -222,12 +214,13 @@
       const roomId = this.roomId
       if (!roomId) return
       // debbounce if client is not loggedIn yet
-      if (!window.client || !window.client.credentials.userId) {
+      if (!window.client || !client._http.opts.accessToken) {
         return this.debounce('initialize-room', this.initializeRoom.bind(this), 300)
       }
-      window.room = this.room = client.getRoom(this.roomId)
+      // window.room = this.room = client.getRoom(this.roomId)
+      window.roomId = this.roomId
       // debounce if the room create event hasn't been processed yet
-      if (!this.room) {
+      if (!this.roomId) {
         return this.debounce('initialize-room', this.initializeRoom.bind(this), 300)
       }
       this.state[this.roomId] = { children: new NotifyArray() }
@@ -236,20 +229,20 @@
 
     onLoggedIn(userId) {
       this.loggedIn = true
-      if (this.roomId) {
+      if (this.roomId && !client.isGuest()) {
         client.joinRoom(this.roomId)
       }
     },
 
     initializeComments() {
       try {
+        client.on("Room.timeline", (matrixEvent, room, toStartOfTimeline) => {
+          const event = matrixEvent.event
+          console.log('received Room.timeline event', event.event_id, event.type, room.room_id)
+          this.processEvent(event)
+        })
         this.buildInitialRoomState(this.roomId).then((_) => {
           this.clientReady = true
-          client.on("Room.timeline", (matrixEvent, room, toStartOfTimeline) => {
-            const event = matrixEvent.event
-            console.log('received Room.timeline event', event.event_id, event.type, room.room_id)
-            this.processEvent(event)
-          })
           // FIX THIS ALSO
           this.dataTopLevelComments = this.state[this.roomId].children
           this.dataTopLevelComments.addListener(this, 'dataTopLevelComments')
@@ -281,7 +274,7 @@
 
     logout() {
       this.loggedIn = false
-      this.createClientAndLogin(this.defaultLogin, this.defaultPassword, this.homeServerAddress).then((success) => {
+      this.createClientAndLogin(null, null, this.homeServerAddress, true).then((success) => {
         this.userId = null
       })
     },
