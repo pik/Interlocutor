@@ -35,7 +35,7 @@
     <div class='reply-row2-wrapper'>
       <template is="dom-if" if="[[!posting]]">
         <paper-button class='reply-cancel' on-tap="close">cancel</paper-button>
-        <paper-button class='reply-post' on-tap="post">post</paper-button>
+        <paper-button class='reply-post' on-tap="post">[[_postButtonText(action)]]</paper-button>
       </template>
       <template is="dom-if" is="[[posting]]">
 
@@ -66,12 +66,18 @@
         type: Boolean,
         value: false
       },
+      action: {
+        type: String,
+      }
+    },
+    _postButtonText(action) {
+      return action === 'interlocutor.edit' ? 'Edit' : 'Post'
     },
 
     post: function() {
       this.$.replyBody.disabled = true
       this.posting = true
-      const action = this.action === 'm.edit' ? this.sendEditComment.bind(this): this.sendCreateComment.bind(this)
+      const action = this.action === 'interlocutor.edit' ? this.sendEditComment.bind(this): this.sendCreateComment.bind(this)
       action(this.targetId, this.content).then((_) => {
         this.$.replyBody.disabled = false
         this.posting = false
