@@ -196,8 +196,9 @@
 
     _recomputeFilteredChildrenCountFromEvent(event, source) {
       event.preventDefault()
+
       this.filteredChildrenCount = this.dataTopLevelComments.reduce((prev, cur) => {
-          return prev + (this.permitted(cur) ? (cur.filteredChildrenCount || 0) : (cur.children.length) + 1)
+          return prev + (this.permitted(cur) ? (cur.filteredChildrenCount || 0) : (cur.filteredChildrenCount) + 1)
         }, 0)
     },
 

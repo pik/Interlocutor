@@ -140,7 +140,7 @@
         'cancel': 'toggleReply',
         'flags-updated': '_recomputeChildrenFromEvent',
         'children-count-changed': '_recomputeChildrenCountFromEvent',
-        'filtered-children-count-changed': '_recomputeChildrenCountFromEvent'
+        'filtered-children-count-changed': '_recomputeFilteredChildrenCountFromEvent'
       },
 
       observers: [
@@ -306,7 +306,7 @@
         }
       },
 
-      _recomputeFilterdChildrenCountFromEvent(event, source) {
+      _recomputeFilteredChildrenCountFromEvent(event, source) {
         if (source !== this) {
           // console.log('_recomputeChildrenCountFromEvent', event)
           event.preventDefault()
@@ -317,7 +317,7 @@
       // TODO Axe this too
       _recomputeFilterdChildrenCount(force) {
         const count = this.dataChildren.reduce((prev, cur) => {
-          return prev + (this.permitted(cur) ? (cur.filteredChildrenCount || 0) : (cur.children.length) + 1)
+          return prev + (this.permitted(cur) ? (cur.filteredChildrenCount || 0) : (cur.filteredChildrenCount) + 1)
         }, 0)
         if (this.filteredChildrenCount !== count || force) {
           this.comment.filteredChildrenCount = this.filteredChildrenCount = count
