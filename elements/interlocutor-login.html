@@ -24,8 +24,12 @@
       <paper-input id="password" label="password" type="password"></paper-input>
     </div>
     <div>
-      <paper-button class='reply-cancel' on-tap="login">[login]</paper-button>
-      <br/>
+      <paper-button on-tap="login">[login]</paper-button>
+      <paper-button >
+        <a href=[[_registrationURL(homeServerAddress)]] rel="noopener noreferrer" target="_blank">
+          [create account]
+        </a>
+      </paper-button>
     </div>
   </template>
 
@@ -45,11 +49,15 @@
       },
       homeServerAddress: {
         type: String
-      }
+      },
     },
 
     attached() {
       InterlocutorSdkBehavior.foo = 5
+    },
+
+    _registrationURL(homeServerAddress) {
+      return homeServerAddress + "/_matrix/client/#/register"
     },
 
     login() {
@@ -68,15 +76,6 @@
           }
         })
     },
-
-    toggle: function(selector) {
-      this.commentBodyOpen = !this.commentBodyOpen
-    },
-
-    canReply: function() {
-
-    }
-
   });
 </script>
 </dom-module>
