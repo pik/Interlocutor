@@ -4,27 +4,17 @@ Interlocutor is a decentralized comment software built on a Matrix (http://matri
 
 The goal of this project is to provide a censorship-resistant software for discussions, while providing a comfortable modern UI and effective moderation.
 
-### Comment UX
+### Comment UI
 
-#### Flagging Comments
+**Flagging Comments**: Comments can be flagged by users by clicking the flag icon. 
 
-Comments can be flagged by users by clicking the flag icon. 
+**Starring Comments**: Comments can be favorited by users by clicking the star icon. 
 
-#### Starring Comments
+**Collapsing Comments**: Comments can be collapsed by clicking the collapse icon.
 
-Comments can be favorited by users by clicking the star icon. 
+**Edit Comments**: Comments can be editted by clicking the edit button. An edited comment will display the time it was last edited.
 
-#### Collapsing Comments
-
-Comments can be collapsed by clicking the collapse icon.
-
-#### Edit Comments
-
-Comments can be editted by clicking the edit button. An edited comment will display the time it was last edited.
-
-#### User Actions
-
-Ignore User will add the user to a list of Ignored Identities, see Moderation Features below. 
+**User Actions**: Ignore User will add the user to a list of Ignored Identities, see Moderation Features below. 
 
 Contact User will attempt to initiate a Matrix chat with the user (which they are free to accept or decline).
 
@@ -32,30 +22,17 @@ Contact User will attempt to initiate a Matrix chat with the user (which they ar
 
 Interlocutor supports a number of moderatain features which are accessible to all users. The aim is to allow a website to provide a set of sane defaults which will provide a good user experience for most users while still leaving final control to the user (censorship-resistant).
 
-#### Toggle Moderation Settings
+**Toggle Moderation Settings**: Toggling the power icon will entirely disable all moderation features for a user.
 
-Toggling the power icon will entirely disable all moderation features for a user.
+**Flag Kill Threshold**: Flag Kill Threshold determines how many flags a comment should have before it is hidden by filters. This does not apply to comments Flagged by a Moderator Identity, as those are assumed to be malicious and hidden instantly. 
 
-#### Flag Kill Threshold
+**Auto-Collapse Below Star Threshold**: Hides all comments below a certain number of stars.
 
-Flag Kill Threshold determines how many flags a comment should have before it is hidden by filters. This does not apply to comments Flagged by a Moderator Identity, as those are assumed to be malicious and hidden instantly. 
+**Auto-Persisted Settings per Discussion**: For a logged in user, changes to Moderation Settings are automatically persisted on a per-discussion basis. This means that your Moderation Settings will be remembered and restored next time you come back.
 
-#### Auto-Collapse Below Star Threshold
+**Moderator Identities**: Interlocutor allows the hosting site to specify a list of Moderator Identities, a user may choose to add or remove Moderator Identities from this list.
 
-Hides all comments below a certain number of stars.
-
-#### Auto-Persisted Settings per Discussion
-
-For a logged in user, changes to Moderation Settings are automatically persisted on a per-discussion basis. This means that your Moderation Settings will be remembered and restored next time you come back.
-
-#### Moderator Identities
-
-Interlocutor allows the hosting site to specify a list of Moderator Identities, a user may choose to add or remove Moderator Identities from this list.
-
-#### Ignored Users
-
-All comments made by Ignored Users will be hidden from view.
-
+**Ignored Users**: All comments made by Ignored Users will be hidden from view.
 
 ### Usage
 
