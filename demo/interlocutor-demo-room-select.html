@@ -91,9 +91,6 @@
           type: Boolean
         }
       },
-      _valueChanged() {
-        debugger
-      },
       _setupRoomList(loggedIn) {
         if (!loggedIn) return
         client.on('sync', (syncState, oldState, data) => {
