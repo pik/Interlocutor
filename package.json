@@ -1,6 +1,6 @@
 {
   "name": "Interlocutor",
-  "version": "0.0.1",
+  "version": "0.0.9",
   "description": "",
   "scripts": {
     "lint": "eslint . --ext js,html --ignore-path .gitignore",
