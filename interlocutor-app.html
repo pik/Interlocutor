@@ -44,13 +44,13 @@
             <paper-button on-tap="logout">Logout</paper-button>
         </template>
         <template is="dom-if" if="[[!userId]]">
-          <paper-button on-tap="openLogin">Login</paper-button>
+          <paper-button on-tap="openLogin">Login to Post</paper-button>
         </template>
         <interlocutor-login id="login" tabindex="-1" with-backdrop user-id="{{userId}}" home-server-address="[[homeServerAddress]]"></interlocutor-login>
       </span>
       <span class='settings-section' hidden="[[!clientReady]]">
         <paper-icon-button on-tap="openSettings" icon="settings"></paper-icon-button>
-        <interlocutor-settings id="settings" client-ready="[[clientReady]]" user-id="[[userId]]" default-settings="[[defaultSettings]]" tabindex="-1" with-backdrop></interlocutor-settings>
+        <interlocutor-settings id="settings" client-ready="[[clientReady]]" user-id="[[userId]]" default-settings="[[defaultSettings]]" config=[[config]] tabindex="-1" with-backdrop></interlocutor-settings>
         [[_filteredChildrenCountStatement(filteredChildrenCount)]]
       </span>
       <!-- <interlocutor-author-profile id="authorProfile"></interlocutor-author-profile> -->
@@ -97,6 +97,11 @@
         value() { return this._defaultSettings() }
       },
 
+      config: {
+        type: Object,
+        value() { return this._defaultConfig() }
+      },
+
       homeServerAddress: {
         type: String,
       },
@@ -140,6 +145,11 @@
         type: Array,
         value: function() { return [] },
         computed: '_topLevelComments(dataTopLevelComments.*, settingsUpdated)'
+      },
+
+      commentCount: { // TODO: unusued atm
+        type: Number,
+        value: 0
       },
 
       filteredChildrenCount: {
@@ -208,7 +218,8 @@
       return ""
     },
 
-    initializeRoom(roomId) {
+    initializeRoom(_) {
+      const roomId = this.roomId
       if (!roomId) return
       // debbounce if client is not loggedIn yet
       if (!window.client || !window.client.credentials.userId) {

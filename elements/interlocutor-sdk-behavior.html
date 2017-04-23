@@ -88,10 +88,15 @@
           filterOn: true,
           trustedIdentities: { '@pik:pik-test': {} },
           ignoredIdentities: {},
-          flagsEnabled: true, // TODO
-          upvotesEnabled: true, // TODO
           editWindow: 1000*60*24*7, // Set to -1 to disable edit completely
         }
+
+  const __defaultConfig = {
+    flagsEnabled: true,
+    upvotesEnabled: true,
+    editsEnabled: true,
+    debug: false
+  }
 
   const InterlocutorSdkBehavior = {
 
@@ -102,13 +107,31 @@
         // Rooms default to private visibility if this key is not included.
         // NB: This should not be confused with join_rules which also uses the word public. One of: ["public", "private"]
         visibility: 'public',
-        history_visibility: 'world_readable',
-        guest_can_join: true,
+        initial_state: [
+          {
+            type: "m.room.guest_access",
+              state_key: "",
+              content: {
+                guest_access: "can_join"
+            }
+          },
+          {
+            type: "m.room.history_visibility",
+            state_key: "",
+              content: {
+                history_visibility: "world_readable"
+            }
+          }
+        ]
       }
     },
 
     createRoom(opts) {
       return client.createRoom(opts)
+    },
+
+    _defaultConfig() {
+      return __defaultConfig
     },
 
     _defaultSettings() {
@@ -117,10 +140,12 @@
 
     permitted (comment) {
       const settings = document.getElementById('settings').settings
+      const config = document.getElementById('settings').config
       if (!settings.filterOn) return true
       const sender = comment.user_id || comment.sender
       // If the user is in the ignore list gib it right away
       if (settings.ignoredIdentities[sender]) return false
+      if (config.flagsEnabled === false) return true
       const flagged = comment.flagged
       let flagCount = 0
       const trustedIdentities = settings.trustedIdentities

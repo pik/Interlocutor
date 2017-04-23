@@ -412,23 +412,28 @@
       },
 
       _canEdit(userId, comment) {
+        const settings = document.getElementById('settings').settings
+        const config = document.getElementById('settings').config
         return userId && comment && settings && settings.editWindow !== -1 &&
-          (comment.user_id === userId) &&
-          (settings.editWindow + comment.origin_server_ts < new Date().getTime())
+          ((comment.user_id || comment.sender) === userId) &&
+          (settings.editWindow + comment.origin_server_ts > new Date().getTime()) &&
+          config.editsEnabled
 
       },
 
-      // FIX ME
       _canUpVote(userId, comment) {
-        return userId && comment // && (comment.user_id !== userId)
+        const config = document.getElementById('settings').config
+        return userId && comment  && (comment.user_id !== userId || config.debug) && config.upvotesEnabled
       },
 
       _canFlag(userId, comment) {
-        return userId && comment // && (comment.user_id !== userId)
+        const config = document.getElementById('settings').config
+        return userId && comment && (comment.user_id !== userId || config.debug) && config.flagsEnabled
       },
 
       canReply(userId, comment) {
-        return userId && comment // && (comment.user_id !== userId)
+        const config = document.getElementById('settings').config
+        return userId && comment && (comment.user_id !== userId || config.debug)
       },
 
       openReplyOverlay() {
