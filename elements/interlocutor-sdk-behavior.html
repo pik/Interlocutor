@@ -164,18 +164,20 @@
     },
 
     createClientAndLogin(username, password, homeServerAddress, logout) {
-      if (!window.client) {
-        window.client = matrixcs.createClient(homeServerAddress)
-        client.txnId = 0
-      }
-
-      if (logout) {
+      if (logout && window.client) {
         client.stopClient()
         client.logout().then((success) => {
             this.createClientAndLogin(username, password, homeServerAddress, false)
           }, (err) => {
             console.log(err)
           })
+      }
+
+      // It's 2017 - but Polymer doesn't have ES6 imports or require support
+      // Let's not talk about it...
+      if (!window.client || (window.client && client.getHomeserverUrl() !== homeServerAddress)) {
+        window.client = matrixcs.createClient(homeServerAddress)
+        client.txnId = 0
       }
 
       // client.on("Room.timeline", (matrixEvent, room, toStartOfTimeline) => {

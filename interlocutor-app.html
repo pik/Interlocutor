@@ -46,7 +46,7 @@
         <template is="dom-if" if="[[!userId]]">
           <paper-button on-tap="openLogin">Login to Post</paper-button>
         </template>
-        <interlocutor-login id="login" tabindex="-1" with-backdrop user-id="{{userId}}" home-server-address="[[homeServerAddress]]"></interlocutor-login>
+        <interlocutor-login id="login" tabindex="-1" with-backdrop user-id="{{userId}}" default-home-server-address="[[homeServerAddress]]"></interlocutor-login>
       </span>
       <span class='settings-section' hidden="[[!clientReady]]">
         <paper-icon-button on-tap="openSettings" icon="settings"></paper-icon-button>
