@@ -50,6 +50,7 @@
     </style>
     <div class='close-wrapper'>
       <paper-icon-button class='close-button' icon="exit-to-app" on-tap="close"></paper-icon-button>
+      <span>Connected to [[homeServerAddress]]</span>
     </div>
     <div class='settings-body'>
       <paper-icon-button icon="settings-power" class$="[[_classBinding(filterOn, 'on')]]" on-tap="toggle"></paper-icon-button>
@@ -113,6 +114,10 @@
     },
 
     properties: {
+      homeServerAddress: {
+        type: String
+      },
+
       customSettings: {
         type: Object,
       },
@@ -284,3 +289,4 @@
   });
 </script>
 </dom-module>
+1
