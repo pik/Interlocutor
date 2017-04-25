@@ -13,7 +13,12 @@
     "vaadin-combo-box": "^1.1.5",
     "paper-slider": "git://github.com/pik/paper-slider.git#always-numeric",
     "paper-menu-button": "^1.5.2",
-    "paper-radio-group": "^1.2.2"
+    "paper-radio-group": "^1.2.2",
+    "paper-dropdown-menu": "^1.5.0",
+    "iron-image": "^1.2.6",
+    "paper-spinner": "^1.2.1",
+    "paper-listbox": "^1.1.3",
+    "paper-item": "^1.2.2"
   },
   "devDependencies": {
     "iron-component-page": "PolymerElements/iron-component-page#^1.0.0",
