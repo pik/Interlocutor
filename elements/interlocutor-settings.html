@@ -206,20 +206,20 @@
 
     addTrustedIdentityFromInput(e) {
       if (e.keyCode == 13) {
-        this.set('settings.trustedIdentities.' + e.target.value, {})
+        // Because Polymer .set sucks... How do you even _pathEffector
+        // A key containing "." ?
+        this.settings.trustedIdentities[e.target.value] = {}
+        this._pathEffector('settings.trustedIdentities.*')
         this.newTrustedIdentity = ''
       }
     },
 
     addIgnoredIdentityFromInput(e) {
       if (e.keyCode == 13) {
-        this.addIgnoredIdentity(e.target.value)
+        this.settings.ignoredIdentities[e.target.value] = {}
+        this._pathEffector('settings.ignoredIdentities.*')
         this.newIgnoredIdentity = ''
       }
-    },
-
-    addIgnoredIdentity(target) {
-      this.set('settings.ignoredIdentities.' + target, {})
     },
 
     removeTrustedIdentity(event) {
