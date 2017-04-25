@@ -157,9 +157,7 @@
           flagCount += 1
         }
       }
-      return (flagCount < settings.flagKillThreshold
-
-        )
+      return (flagCount < settings.flagKillThreshold)
 
     },
 
@@ -207,14 +205,16 @@
     },
 
     addEvent (event) {
-      // In the future let's raise if a top-level comment doesn't supply
-      // roomId, rather than defaulting.
-      const targetId = event.content.body.target_id || roomId
+      // the state object contains events key'd by event_id or (room_id) for top-level
+      // to Add an event add the event_id: <event> pair to state
+      // and then push the event into the children array of the event it references.
+      // A top level comment should supply the roomId as it's target_id
+      const targetId = event.content.body.target_id
       // TODO: Find out why I'm receiving duplicate events so I don't have to guard
       if (this.state[event.event_id]) {
         console.log('Received duplicate comment event - returning..', event.user_id || event.sender, event.event_id, event.content.msgtype, event.content.body)
         return
-      } else if (this.state[targetId] == undefined) {
+      } else if (this.state[targetId] === undefined && targetId !== roomId) {
         // TODO Matrix-JS-SDK addEventsToTimeline will allow on the "on" event function
         // to bubble and error out
         return console.log('Failed to find parent comment with id: ', targetId)
@@ -285,7 +285,7 @@
                 // on the base value
                 element.notifyPath(`flagged.${sender}`, value)
               }
-            }
+          }
             break
           case 'interlocutor.edit':
             target.content.body.text = content.body.text
@@ -303,6 +303,8 @@
     },
 
     buildInitialRoomState (roomId) {
+      // Setupo the root Node for the CommentTree
+      this.state[roomId] = { children: new NotifyArray() }
       console.log('Building initial comment-tree state..')
       const limit = 1000
       if (client.isGuest()) {

@@ -147,7 +147,7 @@
         '_onFlagged(flagged.*)',
         '_recomputeChildren(settingsUpdated)',
         '_recomputeChildrenCount(children.*)',
-        '_recomputeFilterdChildrenCount(children.*)'
+        '_recomputeFilteredChildrenCount(children.*)'
       ],
 
       properties: {
@@ -310,14 +310,14 @@
         if (source !== this) {
           // console.log('_recomputeChildrenCountFromEvent', event)
           event.preventDefault()
-          this._recomputeFilterdChildrenCount()
+          this._recomputeFilteredChildrenCount()
         }
       },
 
       // TODO Axe this too
-      _recomputeFilterdChildrenCount(force) {
+      _recomputeFilteredChildrenCount(force) {
         const count = this.dataChildren.reduce((prev, cur) => {
-          return prev + (this.permitted(cur) ? (cur.filteredChildrenCount || 0) : (cur.filteredChildrenCount) + 1)
+          return prev + (this.permitted(cur) ? (cur.filteredChildrenCount || 0) : cur.filteredChildrenCount + 1)
         }, 0)
         if (this.filteredChildrenCount !== count || force) {
           this.comment.filteredChildrenCount = this.filteredChildrenCount = count
@@ -327,7 +327,7 @@
 
       attached() {
         this._recomputeChildrenCount(true)
-        this._recomputeFilterdChildrenCount(true)
+        this._recomputeFilteredChildrenCount(true)
         this.comment.children.addListener(this, 'dataChildren')
       },
 

@@ -1,4 +1,4 @@
-<script src="./node_modules/matrix-js-sdk/dist/browser-matrix-dev.js"></script>
+<script src="./node_modules/matrix-js-sdk/dist/browser-matrix-dev-lite.js"></script>
 <script src="./bower_components/moment/min/moment.min.js"></script>
 <script src="./src/scripts.js"></script>
 
@@ -82,7 +82,8 @@
       'logged-in': 'onLoggedIn',
       'filtered-children-count-changed': '_recomputeFilteredChildrenCountFromEvent',
       'open-author-profile': 'openAuthorProfile',
-      'ignore-user': '_ignoreUser'
+      'ignore-user': '_ignoreUser',
+      'flags-updated': '_recomputeTopLevelComments'
     },
 
     observers: [
@@ -196,10 +197,30 @@
 
     _recomputeFilteredChildrenCountFromEvent(event, source) {
       event.preventDefault()
+      this._recomputeFilteredChildrenCount()
+    },
 
-      this.filteredChildrenCount = this.dataTopLevelComments.reduce((prev, cur) => {
-          return prev + (this.permitted(cur) ? (cur.filteredChildrenCount || 0) : (cur.filteredChildrenCount) + 1)
-        }, 0)
+    _recomputeFilteredChildrenCount() {
+      const computeDataChildrenCount = (targetId) => {
+        if (this.state[targetId] === undefined) return 0
+        let count = this.state[targetId].children.length
+        for (let childComment of this.state[targetId].children) {
+          count += computeDataChildrenCount(childComment.event_id)
+        }
+        return count
+      }
+      const childrenCount = this.topLevelComments.reduce((prev, cur) => {
+        return prev + cur.childrenCount
+      }, 0)
+      const dataChildrenCount = computeDataChildrenCount(this.roomId)
+      this.filteredChildrenCount = dataChildrenCount - childrenCount
+      // this.filteredChildrenCount = this.dataTopLevelComments.reduce((prev, cur) => {
+      //     return prev + (this.permitted(cur) ? (cur.filteredChildrenCount || 0) : (cur.filteredChildrenCount) + 1)
+      //   }, 0)
+    },
+
+    _recomputeTopLevelComments(event, source) {
+      this._pathEffector('dataTopLevelComments.*', this.dataTopLevelComments)
     },
 
     _filteredChildrenCountStatement(filteredCommentsCount) {
@@ -224,7 +245,6 @@
       if (!this.roomId) {
         return this.debounce('initialize-room', this.initializeRoom.bind(this), 300)
       }
-      this.state[this.roomId] = { children: new NotifyArray() }
       this.initializeComments()
     },
 
@@ -268,6 +288,7 @@
 
     _topLevelComments() {
       console.log('_topLevelComments')
+      this._recomputeFilteredChildrenCount()
       return this.dataTopLevelComments.filter((comment) => {
         return comment.content.msgtype === 'interlocutor.comment' && this.permitted(comment)
       })
