@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Interlocutor - Free, Censorship-resistant Comment Software</title>
+<!doctype html>
+<script src="./webcomponents-lite.min.js"></script>
+<!-- <link rel="manifest" href="../manifest.json"> -->
+<link rel="stylesheet" href="style.css">
+<link rel="import" href="../build/bundled/interlocutor-app.html">
+
+<h2>Interlocutor - Free, Censorship-resistant Comment Software</h2>
+
+<pre style="white-space: pre-wrap">
+The aim of Interlocutor is to provide a free, censorship resistant comment system, while retaining all the moderation benefits of a centralized application. While an author of a blog or a moderator of a news site may flag or delete posts, and indeed in the majority of cases these actions are an appropriate way to deal with spam, or otherwise malicious content, but in some cases the user may really wonder what is going, what content is missing, was it content without value breaking site guidelines, or was it <b>censored</b>?
+
+<div class="image-columns">
+  <image src="images/reddit-deleted.png" style="max-width:50%; height: auto; margin-left: 1em"></image>
+  <div class="image-rows">
+    <image src="images/reddit-ceo-edits.png" style="max-width:100%; height: auto; margin-bottom: 1em"></image>
+    <image src="images/united-airlines-deleting-tweets.png" style="max-width:100%; height: auto;"> </image>
+  </div>
+</div>
+
+Interlocutor gives the User the final say as to what content is hidden or censored. In a traditional centralized database backed system, state altering actions have an irrevocable effect on the content, making the user entirely unaware, or at best second guessing what changed in history.
+
+<div class="diagram">
+<code>
+Moderator Bob ---> [Delete Comment #1] ---> Server
+                                              |
+                                           DataBase
+                            [Comment #1, Comment #2, Comment #3]
+
+User Alice <--- [Comment #2, Comment#3] <--- Server
+                                                |
+                                             DataBase
+                                      [Comment #2, Comment#3]
+</code>
+</div>
+
+Instead Interlocutor utilizes a Matrix (<a href="https://matrix.org">https://matrix.org</a>) backend as an append-only log for all actions, where the final state of the content is rendered based on configurable Moderation Settings. For example in the lower case Alice is sees the default moderated-view of the content, where as Jason sees the content without Moderator Bob's deletion.
+
+<div class="diagram">
+<code>
+Moderator Bob ---> [Delete Comment #1] ---> MatrixServer
+                                                |
+ [Comment #1, Comment #2, Comment #3, Delete Comment #1 (signed Bob)]
+
+
+Aggregation Interface <--- [Comment #1, Comment #2, Comment #3, Delete Comment #1 (signed Bob)] <--- MatrixServer
+
+User Alice <--- [Comment #2, Comment #3] <--- Alice Trusts Bob <--- Aggregation Interface
+
+User Jason <--- [Comment #1, Comment #2, Comment #3] <--- Jason Doesn't Trust Bob <--- Aggregation Interface
+</code>
+</div>
+
+The current moderation interface is a work in-progress but my original inspirations are some of my favorite pieces of free-software: UBlock and UMatrix. UBlock provides sane defaults which provide a good user-experience for a majority of web-sites and a simple on/off button. UMatrix provides a set of fine-grained control.
+<!--
+<div class="image-columns">
+  <image src="ublock-ui.png" style="max-width:40%; height: auto; margin: 2em"></image>
+  <image src="umatrix-ui.png" style="max-width:25%; height: auto; margin: 2em"></image>
+</div> -->
+
+Those using Interlocutor to provide comments for their site are able to configure the default moderation settings which are loaded for every user, such as the number of flags above which comments will be hidden, and moderator identities. Interlocutor also automatically persists custom moderation settings for a User (should they choose to make changes) and future visits to the site will load user-specific settings.
+
+
+Interlocutor is under development and hosted at <a href="https://github.com/pik/interlocutor">https://github.com/pik/interlocutor</a>.
+
+</pre>
+
+<interlocutor-app
+      id='interlocutorApp''
+      default-settings='{"flagKillThreshold":3,"voteCollapseThreshold":-1,"filterOn":true,"trustedIdentities":{"@pik:matrix.amaznev.net":{}},"ignoredIdentities":{},"editWindow":10080000}'
+      config='{"flagsEnabled":true,"upvotesEnabled":true, "debug":false}'
+      room-id='!LyUOBSZLhKOHYlsCmU:matrix.amaznev.net'
+      home-server-address='https://matrix.amaznev.net:8448'>
+</interlocutor-app>
+<footer>
+</footer>
