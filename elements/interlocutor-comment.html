@@ -120,7 +120,7 @@
       </div>
       <div class='comment-children'>
         <template is="dom-repeat" items="[[children]]" as="comment">
-          <interlocutor-comment id="[[comment.event_id]]" comment="[[comment]]" state="[[state]]" user-id="[[userId]]" settings-updated="[[settingsUpdated]]"></interlocutor-comment>
+          <interlocutor-comment comment="[[comment]]" state="[[state]]" user-id="[[userId]]" settings-updated="[[settingsUpdated]]"></interlocutor-comment>
         </template>
       </div>
     </iron-collapse>
@@ -147,7 +147,7 @@
         '_onFlagged(flagged.*)',
         '_recomputeChildren(settingsUpdated)',
         '_recomputeChildrenCount(children.*)',
-        '_recomputeFilteredChildrenCount(children.*)'
+        '_recomputeFilteredChildrenCount(children.*)',
       ],
 
       properties: {
@@ -274,6 +274,10 @@
         }
       },
 
+      _setupId(_) {
+        this.id = this.comment.event_id
+      },
+
       _contactUserURL(userName) {
         return `https://matrix.to/#/${userName}`
       },
@@ -326,8 +330,10 @@
       },
 
       attached() {
+        this._setupId()
         this._recomputeChildrenCount(true)
         this._recomputeFilteredChildrenCount(true)
+        this.comment.onEventIdChanged = this._setupId.bind(this)
         this.comment.children.addListener(this, 'dataChildren')
       },
 

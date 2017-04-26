@@ -74,11 +74,16 @@
       return action === 'interlocutor.edit' ? 'Edit' : 'Post'
     },
 
-    post: function() {
+    post() {
       this.$.replyBody.disabled = true
       this.posting = true
-      const action = this.action === 'interlocutor.edit' ? this.sendEditComment.bind(this): this.sendCreateComment.bind(this)
-      action(this.targetId, this.content).then((_) => {
+      let promise
+      if (this.action === 'interlocutor.edit') {
+        promise = this.sendEditComment(this.targetId, this.content)
+      } else {
+        promise = this.sendCreateComment(this.targetId, this.content)
+      }
+      promise.then((_) => {
         this.$.replyBody.disabled = false
         this.posting = false
         this.close()
@@ -90,7 +95,7 @@
       })
     },
 
-    close: function() {
+    close() {
       this.content = ''
       Polymer.IronOverlayBehaviorImpl.close.apply(this)
     }

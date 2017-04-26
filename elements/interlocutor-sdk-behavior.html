@@ -302,7 +302,17 @@
       }
     },
 
+    onLocalEchoUpdated(matrixEvent, Room, eventId, oldStatus) {
+      if (matrixEvent.status === "sent" && eventId && oldStatus === "sending" &&
+        matrixEvent.event.onEventIdChanged) {
+        console.log('eventId updated', eventId)
+        matrixEvent.event.onEventIdChanged(eventId)
+      }
+    },
+
     buildInitialRoomState (roomId) {
+      // Setup notification for event_id changes
+      client.addListener("Room.localEchoUpdated", this.onLocalEchoUpdated)
       // Setupo the root Node for the CommentTree
       this.state[roomId] = { children: new NotifyArray() }
       console.log('Building initial comment-tree state..')
