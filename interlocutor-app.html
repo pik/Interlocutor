@@ -178,7 +178,7 @@
     },
 
     initializeClient() {
-      this.createClientAndLogin(null, null, this.homeServerAddress).then((success) => {
+      this.activateGuestClient(this.homeServerAddress).then((success) => {
         this.loggedIn = true
       })
     },
@@ -292,8 +292,9 @@
 
     logout() {
       this.loggedIn = false
-      this.createClientAndLogin(null, null, this.homeServerAddress, true).then((success) => {
+      this.logoutClient().then((success) => {
         this.userId = null
+        this.activateGuestClient(this.homeServerAddress)
       })
     },
 

@@ -20,10 +20,15 @@
       a, a:visited, a:hover, a:active {
         color: inherit;
       }
+
+      .error-message {
+        color: red;
+      }
+
     </style>
-<!--     <div class='close-wrapper'>
-      <paper-icon-button class='close-button' icon="close" on-tap="close"></paper-icon-button>
-    </div> -->
+    <div class="error-message">
+      [[loginError]]
+    </div>
     <div>
       <paper-input id="username" label="username"></paper-input>
       <paper-input id="password" label="password" type="password"></paper-input>
@@ -77,6 +82,10 @@
       homeServerAddressType: {
         type: String,
         value: 'default'
+      },
+      loginError: {
+        type: String,
+        value: ''
       }
     },
 
@@ -95,18 +104,18 @@
     },
 
     login() {
-      InterlocutorSdkBehavior.createClientAndLogin(this.$.username.value, this.$.password.value, this.homeServerAddress, true)
+      InterlocutorSdkBehavior.loginClient(this.$.username.value, this.$.password.value, this.homeServerAddress)
         .then((result) => {
-          this.$.username.value = this.$.password.value = ''
+          this.$.username.value = this.$.password.value = this.loginError = ''
           this.userId = result.user_id
           this.fire('logged-in', result.user_id)
           this.close()
         }, (err) => {
           if (err.httpStatus === 403) {
             this.$.password.value = ''
-            this.fire('notify', 'Incorrect Login Credentials.')
+            this.loginError = 'Incorrect Login Credentials.'
           } else {
-            this.fire('notify', 'Something went wrong, please try again.')
+            this.loginError = 'Something went wrong, please try again.'
           }
         })
     },
