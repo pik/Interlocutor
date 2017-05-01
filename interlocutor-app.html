@@ -5,7 +5,7 @@
 <link rel="import" href="./bower_components/polymer/polymer.html">
 <link rel="import" href="./bower_components/paper-button/paper-button.html">
 <link rel="import" href="./bower_components/paper-icon-button/paper-icon-button.html">
-<link rel="import" href="./bower_components/paper-toast/paper-toast.html">
+<!-- <link rel="import" href="./bower_components/paper-toast/paper-toast.html"> -->
 <link rel="import" href="./bower_components/paper-spinner/paper-spinner-lite.html">
 <link rel="import" href="./bower_components/paper-button/paper-button.html">
 
@@ -24,10 +24,6 @@
         display: flex;
         flex-direction: column;
         align-items: flex-start;
-      }
-
-      paper-toast {
-
       }
 
     </style>
@@ -55,7 +51,7 @@
       </span>
       <!-- <interlocutor-author-profile id="authorProfile"></interlocutor-author-profile> -->
     </div>
-    <paper-toast id="toast" text="" vertical-align="top"></paper-toast>
+    <!-- <paper-toast id="toast" text="" vertical-align="top"></paper-toast> -->
     <div class='comment-section' hidden="[[!clientReady]]">
       <template is="dom-if" if="[[_canReply(userId, roomId)]]">
         <paper-button on-tap="openReplyOverlay">Add Comment</paper-button>
@@ -318,8 +314,8 @@
     },
 
     notify(event) {
-      this.$.toast.text = event.detail
-      this.$.toast.open()
+      // this.$.toast.text = event.detail
+      // this.$.toast.open()
     },
 
     openReplyOverlay() {
