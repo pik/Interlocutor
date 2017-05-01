@@ -46,12 +46,10 @@ For usage outside of a Polymer App include webcomponents-lite.js and the bundled
 <link rel="import" href="./build/bundled/interlocutor-app.html">
 ```
 
-Than simply include the `<interlocutor-app></interlocturp-app>` element. 
+Than simply include the `<interlocutor-app>` element. 
 
 ```
     <interlocutor-app
-      default-login="password-for-guest-viewing"
-      default-password="password-for-guest-user"
       room-id="room-id"
       home-server-address="https://my.home.server.address.com">
     </interlocutor-app>
