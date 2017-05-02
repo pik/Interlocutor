@@ -25,7 +25,6 @@
         flex-direction: column;
         align-items: flex-start;
       }
-
     </style>
     <template is="dom-if" if="[[!clientReady]]">
       <span hidden="[[!roomId]]">
@@ -46,7 +45,16 @@
       </span>
       <span class='settings-section' hidden="[[!clientReady]]">
         <paper-icon-button on-tap="openSettings" icon="settings"></paper-icon-button>
-        <interlocutor-settings id="settings" client-ready="[[clientReady]]" user-id="[[userId]]" default-settings="[[defaultSettings]]" config=[[config]] home-server-address=[[homeServerAddress]] tabindex="-1" with-backdrop></interlocutor-settings>
+        <interlocutor-settings
+          id="settings"
+          client-ready="[[clientReady]]"
+          user-id="[[userId]]"
+          default-settings="[[defaultSettings]]"
+          config=[[config]]
+          home-server-address=[[homeServerAddress]]
+          tabindex="-1"
+          with-backdrop>
+        </interlocutor-settings>
         [[_filteredChildrenCountStatement(filteredChildrenCount)]]
       </span>
       <!-- <interlocutor-author-profile id="authorProfile"></interlocutor-author-profile> -->
@@ -175,6 +183,17 @@
 
     attached() {
       this.initializeClient()
+      this._hashChangeListener = (hashChangeEvent) => {
+        if (hashChangeEvent.oldURL.includes('#interlocutor-settings') && !window.location.hash.includes('#interlocutor-settings')) {
+          this.$.settings.close()
+        }
+      }
+      // Why the API doesn't give back a listener ID as with timeouts idk
+      window.addEventListener("hashchange", this._hashChangeListener)
+    },
+
+    dettached() {
+      window.removeEventListener("hashchange", this._hashChangeListener)
     },
 
     initializeClient() {
@@ -311,6 +330,7 @@
     },
 
     openSettings() {
+      window.location.hash = '#interlocutor-settings'
       this.$.settings.open()
     },
 
