@@ -186,6 +186,8 @@
       this._hashChangeListener = (hashChangeEvent) => {
         if (hashChangeEvent.oldURL.includes('#interlocutor-settings') && !window.location.hash.includes('#interlocutor-settings')) {
           this.$.settings.close()
+        } else if (hashChangeEvent.oldURL.includes('#interlocutor-login') && !window.location.hash.includes('#interlocutor-login')) {
+          this.$.login.close()
         }
       }
       // Why the API doesn't give back a listener ID as with timeouts idk
@@ -326,6 +328,7 @@
     },
 
     openLogin() {
+      window.location.hash = '#interlocutor-login'
       this.$.login.open()
     },
 
