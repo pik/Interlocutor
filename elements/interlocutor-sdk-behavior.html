@@ -337,7 +337,8 @@
       console.log('Building initial comment-tree state..')
       const limit = 1000
       if (client.isGuest()) {
-        return client.peekInRoom(roomId, limit)
+        // roomInitialSyncLimit, peekLimit
+        return client.peekInRoom(roomId, 0, limit)
       } else {
         return client.roomInitialSync(roomId, limit).then((result) => {
           const events = result.messages.chunk.sort((e1, e2) => {
