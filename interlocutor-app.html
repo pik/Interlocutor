@@ -269,6 +269,11 @@
       this.loggedIn = true
       if (this.roomId && !client.isGuest()) {
         client.joinRoom(this.roomId)
+        client.on("Room.timeline", (matrixEvent, room, toStartOfTimeline) => {
+          const event = matrixEvent.event
+          console.log('received Room.timeline event', event.event_id, event.type, room.room_id)
+          this.processEvent(event)
+        })
       }
     },
 
