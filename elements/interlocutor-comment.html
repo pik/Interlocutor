@@ -51,12 +51,52 @@
         cursor: pointer;
       }
 
+      .base-avatar-wrapper {
+          height:auto;
+          text-align:center;
+          position:relative;
+      }
+      .base-avatar-text {
+        position: absolute;
+        margin: auto;
+        top: 0;
+        left:0;
+        right:0;
+        bottom:0;
+        color: white;
+        font-size: 1.2em;
+        /*width: 1.55em;*/
+        line-height: 1.55em;
+      }
+      .avatar-img {
+          border-radius: 1.8em;
+          width:1.8em;
+          height:1.8em;
+      }
+
+      .img-1 {
+        background: url(data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAIAAAADnC86AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAADRJREFUeNrszQENADAIACB9QjNbxSKP4eagAFnTseHFErFYLBaLxWKxWCwWi8Vi8cX4CzAABSwCRWJw31gAAAAASUVORK5CYII=) no-repeat;
+      }
+      .img-2 {
+        background: url(data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAIAAAADnC86AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyhpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMDY3IDc5LjE1Nzc0NywgMjAxNS8wMy8zMC0yMzo0MDo0MiAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTUgKE1hY2ludG9zaCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6Qjc1RDAxMjY3MTYxMTFFNTg0MTdEOEZEMjU0RkJEODgiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6Qjc1RDAxMjc3MTYxMTFFNTg0MTdEOEZEMjU0RkJEODgiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDpFMDlEMEEwOTcxM0QxMUU1ODQxN0Q4RkQyNTRGQkQ4OCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDpFMDlEMEEwQTcxM0QxMUU1ODQxN0Q4RkQyNTRGQkQ4OCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PiLoOuAAAAA0SURBVHja7M0BDQAwCAAgfWgjWcdKj+HmoABZ07HhxRKxWCwWi8VisVgsFovFYvHF+AswAEhjAjt5suc6AAAAAElFTkSuQmCC) no-repeat;
+      }
+      .img-3 {
+        background: url(data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAIAAAADnC86AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAADRJREFUeNrszQENADAIACB9chOaxgCP4eagAFk9seHFErFYLBaLxWKxWCwWi8Vi8cX4CzAAtKMCks/JG8MAAAAASUVORK5CYII=) no-repeat;
+      }
     </style>
     <div class='comment-row1-wrapper'>
       <div class='comment-body-wrapper collapse-comment'>
         <div id="commentRowOne">
-          <template is="dom-if" if="[[commentBodyOpen]]">
-            <iron-image src="[[avatarUrl]]" style="width:1.8em; height:1.8em" sizing="contain" preload fade></iron-image>
+          <template is="dom-if" if="[[_showAvatar(commentBodyOpen, avatarUrl)]]">
+            <iron-image src="[[avatarUrl]]" class="avatar-img" sizing="cover" preload fade></iron-image>
+          </template>
+          <template is="dom-if" if="[[_showBaseAvatar(commentBodyOpen, avatarUrl)]]">
+            <div class="base-avatar-wrapper">
+              <div class$="avatar-img [[baseAvatarImgClass]]"></div>
+              <span class="base-avatar-text">
+                [[baseAvatarText]]
+              </span>
+            </div>
           </template>
           <paper-menu-button id='userMenuButton'>
               <span class='comment-author-name dropdown-trigger'>[[commentAuthor]]</span>
@@ -267,6 +307,18 @@
           computed: '_avatarUrl(commentAuthor)'
         },
 
+        baseAvatarImgClass: {
+          type: String,
+          value: '',
+          computed: '_baseAvatarImgClass(commentAuthor)'
+        },
+
+        baseAvatarText: {
+          type: String,
+          value: '',
+          computed: '_baseAvatarText(baseAvatarImgClass)'
+        },
+
         editedTimestamp: {
           type: Number,
           value: null,
@@ -372,6 +424,22 @@
           }
         }
         return ''
+      },
+
+      _baseAvatarImgClass(commentAuthor) {
+        return this.defaultAvatarImgClassForString(commentAuthor)
+      },
+
+      _baseAvatarText(_baseAvatarImgClass) {
+        return this.commentAuthor[1].toUpperCase()
+      },
+
+      _showAvatar(commentBodyOpen, avatarUrl) {
+        return commentBodyOpen && avatarUrl
+      },
+
+      _showBaseAvatar(commentBodyOpen, avatarUrl) {
+        return commentBodyOpen && !avatarUrl
       },
 
       _commentAuthor() {
