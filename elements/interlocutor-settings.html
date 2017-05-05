@@ -89,7 +89,7 @@
         <template is="dom-if" if=[[config.flagsEnabled]]>
           <div class='moderator-settings'>
             <span> Moderator Identities: </span>
-            <div class="moderator-list" class$="[[_classBinding(filterOn, 'on')]]">
+            <div class$="moderator-list [[_classBinding(filterOn, 'on')]]">
               <template is="dom-repeat" items="[[trustedIdentities]]" as="identity">
                 <span> [[identity]]<paper-icon-button icon="remove-circle" on-tap='removeTrustedIdentity' value="[[identity]]"></paper-icon-button> </span>
               </template>
@@ -99,7 +99,7 @@
         </template>
         <div class='ignore-settings'>
           <span> Ignored Users: </span>
-          <div class='ignored-list' class$="[[_classBinding(filterOn, 'on')]]">
+          <div class$="ignored-list [[_classBinding(filterOn, 'on')]]">
             <template is="dom-repeat" items="[[ignoredIdentities]]" as="identity">
               <p> [[identity]]<paper-icon-button icon="remove-circle" on-tap='removeIgnoredIdentity' value="[[identity]]"></paper-icon-button>
             </template>
