@@ -5,13 +5,21 @@
 <link rel="import" href="../bower_components/iron-collapse/iron-collapse.html">
 <link rel="import" href="../bower_components/iron-image/iron-image.html">
 
-<link rel="import" href="./interlocutor-reply.html">
+<link rel="import" href="./interlocutor-reply-box.html">
 <link rel="import" href="./interlocutor-helper-behavior.html">
 <link rel="import" href="./interlocutor-sdk-behavior.html">
 
 <dom-module id="interlocutor-comment">
   <template>
     <style>
+      @media only screen and (max-width: 500px) {
+        :host {
+          font-size: 10.5px;
+        }
+      }
+      :host {
+        margin-bottom: 0.5em;
+      }
       .comment-children {
         margin-left: 2em;
       }
@@ -113,7 +121,7 @@
               <paper-icon-button
                 icon='create'
                 class="edit-icon"
-                on-tap="openEditOverlay">
+                on-tap="toggleEdit">
               </paper-icon-button>
             </span>
           </template>
@@ -139,19 +147,36 @@
           </template>
         </div>
         <iron-collapse id="commentBodyCollapse" tabindex="0" opened="[[commentBodyOpen]]">
-          <div id='commentBody'>
-            <span id='commentBodyText'>[[text]]</span>
-          </div>
+          <template is="dom-if" if=[[!editOpen]]>
+            <div id='commentBody'>
+              <span id='commentBodyText'>[[text]]</span>
+            </div>
+          </template>
+          <template is="dom-if" if=[[editOpen]]>
+            <interlocutor-reply-box
+              id="editBox"
+              action="interlocutor.edit"
+              content=[[text]]
+              target-id=[[comment.event_id]]
+              open={{editOpen}}>
+            </interlocutor-reply-box>
+          </template>
         </iron-collapse>
       </div>
     </div>
     <iron-collapse id="commentRowTwo" tabindex="0" opened="[[commentBodyOpen]]">
       <div class='comment-row2-wrapper'>
-        <template is="dom-if" if="[[canReply(userId, comment)]]">
-          <paper-button class='comment-reply' on-tap="openReplyOverlay">reply</paper-button>
+        <template is="dom-if" if=[[replyOpen]]>
+          <interlocutor-reply-box
+            id="replyBox"
+            action="interlocutor.comment"
+            target-id=[[comment.event_id]]
+            open={{replyOpen}}>
+          </interlocutor-reply-box>
         </template>
-        <!-- <template is="dom-if" if="[[replyOpen]]"> -->
-        <!-- </template> -->
+        <template is="dom-if" if="[[_canReply(userId, comment)]]">
+          <paper-button class='comment-reply' on-tap="toggleReply" hidden=[[replyOpen]]>reply</paper-button>
+        </template>
       </div>
       <div class='comment-children'>
         <template is="dom-repeat" items="[[children]]" as="comment">
@@ -159,7 +184,6 @@
         </template>
       </div>
     </iron-collapse>
-    <interlocutor-reply id="reply" tabindex="-1" with-backdrop></interlocutor-reply>
   </template>
 
   <script>
@@ -172,7 +196,6 @@
       ],
 
       listeners: {
-        'cancel': 'toggleReply',
         'flags-updated': '_recomputeChildrenFromEvent',
         'children-count-changed': '_recomputeChildrenCountFromEvent',
         'filtered-children-count-changed': '_recomputeFilteredChildrenCountFromEvent'
@@ -183,6 +206,7 @@
         '_recomputeChildren(settingsUpdated)',
         '_recomputeChildrenCount(children.*)',
         '_recomputeFilteredChildrenCount(children.*)',
+        '_setupId(comment.event_id)'
       ],
 
       properties: {
@@ -241,7 +265,11 @@
         replyOpen: {
           type: Boolean,
           value: false,
-          notify: true,
+        },
+
+        editOpen: {
+          type: Boolean,
+          value: false,
         },
 
         userId: {
@@ -296,9 +324,11 @@
           computed: '_commentAuthor(comment.author)'
         },
 
+        // If there is no avatarURL we still want to distinguish
+        // between pre and post computed state
         avatarUrl: {
           type: String,
-          value: '',
+          value: undefined,
           computed: '_avatarUrl(commentAuthor)'
         },
 
@@ -318,7 +348,8 @@
           type: Number,
           value: null,
           computed: '_alias(comment.editedTimestamp)'
-        }
+        },
+
       },
 
       _setupId(_) {
@@ -377,7 +408,6 @@
       },
 
       attached() {
-        this._setupId()
         this._recomputeChildrenCount(true)
         this._recomputeFilteredChildrenCount(true)
         this.comment.onEventIdChanged = this._setupId.bind(this)
@@ -416,6 +446,7 @@
           } else {
             // The client has fetched the comment but has not yet fetched userState - try again soon
             this.debounce('get-avatar-url', () => { this._pathEffector('commentAuthor', commentAuthor) }, 2250)
+            return undefined
           }
         }
         return ''
@@ -434,7 +465,7 @@
       },
 
       _showBaseAvatar(commentBodyOpen, avatarUrl) {
-        return commentBodyOpen && !avatarUrl
+        return commentBodyOpen && avatarUrl === ''
       },
 
       _commentAuthor() {
@@ -501,15 +532,17 @@
         return userId && comment && (comment.user_id !== userId || config.debug) && config.flagsEnabled
       },
 
-      canReply(userId, comment) {
+      _canReply(userId, comment) {
         const config = document.getElementById('settings').config
         return userId && comment && (comment.user_id !== userId || config.debug)
       },
 
-      openReplyOverlay() {
-        this.$.reply.targetId = this.comment.event_id
-        this.$.reply.action = 'interlocutor.comment'
-        this.$.reply.open()
+      toggleReply() {
+        this.replyOpen = !this.replyOpen
+      },
+
+      toggleEdit() {
+        this.editOpen = !this.editOpen
       },
 
       openEditOverlay() {

@@ -13,6 +13,7 @@
 <link rel="import" href="./elements/interlocutor-comment.html">
 <link rel="import" href="./elements/interlocutor-login.html">
 <link rel="import" href="./elements/interlocutor-settings.html">
+<link rel="import" href="./elements/interlocutor-reply-box.html">
 <!-- <link rel="import" href="./elements/interlocutor-author-profile.html"> -->
 <link rel="import" href="./elements/interlocutor-helper-behavior.html">
 <link rel="import" href="./elements/interlocutor-sdk-behavior.html">
@@ -61,13 +62,20 @@
     </div>
     <!-- <paper-toast id="toast" text="" vertical-align="top"></paper-toast> -->
     <div class='comment-section' hidden="[[!clientReady]]">
-      <template is="dom-if" if="[[_canReply(userId, roomId)]]">
-        <paper-button on-tap="openReplyOverlay">Add Comment</paper-button>
-      </template>
+        <template is="dom-if" if=[[replyOpen]]>
+          <interlocutor-reply-box
+            id="replyBox"
+            action="interlocutor.comment"
+            target-id=[[roomId]]
+            open={{replyOpen}}>
+          </interlocutor-reply-box>
+        </template>
+        <template is="dom-if" if="[[_canReply(userId, roomId)]]">
+          <paper-button on-tap="toggleReply" hidden=[[replyOpen]]>Add Comment</paper-button>
+        </template>
       <template is="dom-repeat" items="[[topLevelComments]]" as="comment">
         <interlocutor-comment comment="[[comment]]" state="[[state]]" user-id="[[userId]]" settings-updated="[[settingsUpdated]]"></interlocutor-comment>
       </template>
-      <interlocutor-reply id="reply" tab tabindex="-1" with-backdrop></interlocutor-reply>
     </div>
   </template>
 
@@ -178,7 +186,13 @@
       loggedIn: {
         type: Boolean,
         notify: true
-      }
+      },
+
+      replyOpen: {
+        type: Boolean,
+        value: false,
+      },
+
     },
 
     attached() {
@@ -347,10 +361,8 @@
       // this.$.toast.open()
     },
 
-    openReplyOverlay() {
-      this.$.reply.targetId = this.roomId
-      this.$.reply.action = 'interlocutor.comment'
-      this.$.reply.open()
+    toggleReply() {
+      this.replyOpen = !this.replyOpen
     },
 
     _canReply(userId, roomId) {
