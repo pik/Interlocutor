@@ -437,12 +437,13 @@
 
     // Stolen from matrix-react-sdk
     // Resolves to one of 3 random background colors based on s(String)
-    defaultAvatarImgClassForString(s) {
+    defaultAvatarBgColorForString(s) {
+      const colors = ['#50e3c2', '#76cfa6', '#80cef4']
       let total = 0;
       for (let i = 0; i < s.length; ++i) {
           total += s.charCodeAt(i);
       }
-      return `img-${total % 3 + 1}`
+      return colors[total % colors.length]
     }
   }
 </script>

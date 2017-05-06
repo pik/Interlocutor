@@ -77,14 +77,8 @@
           height:1.8em;
       }
 
-      .img-1 {
-        background: #50e3c2;
-      }
-      .img-2 {
-        background: #76cfa6;
-      }
-      .img-3 {
-        background: #80cef4;
+      .base-avatar-img {
+        background: var(--base-avatar-img-bg-color);
       }
     </style>
     <div class='comment-row1-wrapper'>
@@ -95,7 +89,8 @@
           </template>
           <template is="dom-if" if="[[_showBaseAvatar(commentBodyOpen, avatarUrl)]]">
             <div class="base-avatar-wrapper">
-              <div class$="avatar-img [[baseAvatarImgClass]]"></div>
+              <!-- <div class$="avatar-img [[baseAvatarImgClass]]"></div> -->
+              <div class="avatar-img base-avatar-img"></div>
               <span class="base-avatar-text">
                 [[baseAvatarText]]
               </span>
@@ -220,10 +215,14 @@
         '_recomputeChildren(settingsUpdated)',
         '_recomputeChildrenCount(children.*)',
         '_recomputeFilteredChildrenCount(children.*)',
-        '_setupId(comment.event_id)'
+        '_setupBaseAvatarBgColor(avatarUrl)',
       ],
 
       properties: {
+        backgroundColor: {
+          type: String,
+          value: '#80cef4'
+        },
         state: {
           type: Object,
           value: function() { return {} },
@@ -346,16 +345,10 @@
           computed: '_avatarUrl(commentAuthor)'
         },
 
-        baseAvatarImgClass: {
-          type: String,
-          value: '',
-          computed: '_baseAvatarImgClass(commentAuthor)'
-        },
-
         baseAvatarText: {
           type: String,
           value: '',
-          computed: '_baseAvatarText(baseAvatarImgClass)'
+          computed: '_baseAvatarText(commentAuthor)'
         },
 
         editedTimestamp: {
@@ -364,12 +357,13 @@
           computed: '_alias(comment.editedTimestamp)'
         },
 
-      },
+        id: {
+          type: String,
+          computed: '_alias(comment.event_id)',
+          reflectToAttribute: true
+        }
 
-      _setupId(_) {
-        this.id = this.comment.event_id
       },
-
       _contactUserURL(userName) {
         return `https://matrix.to/#/${userName}`
       },
@@ -424,12 +418,15 @@
       attached() {
         this._recomputeChildrenCount(true)
         this._recomputeFilteredChildrenCount(true)
-        this.comment.onEventIdChanged = this._setupId.bind(this)
+        this.comment.onEventIdChanged = () => {
+          this._pathEffector('comment.event_id', this.comment.event_id)
+        }
         this.comment.children.addListener(this, 'dataChildren')
       },
 
       dettached() {
         this.comment.children.removeListener(this, 'dataChildren')
+        this.comment.onEventIdChanged = undefined
       },
 
       _recomputeChildren(_) {
@@ -466,8 +463,8 @@
         return ''
       },
 
-      _baseAvatarImgClass(commentAuthor) {
-        return this.defaultAvatarImgClassForString(commentAuthor)
+      _setupBaseAvatarBgColor(commentAuthor) {
+        this.updateStyles({'--base-avatar-img-bg-color': this.defaultAvatarBgColorForString(commentAuthor)})
       },
 
       _baseAvatarText(_baseAvatarImgClass) {
