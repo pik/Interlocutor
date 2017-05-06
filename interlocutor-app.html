@@ -74,7 +74,12 @@
           <paper-button on-tap="toggleReply" hidden=[[replyOpen]]>Add Comment</paper-button>
         </template>
       <template is="dom-repeat" items="[[topLevelComments]]" as="comment">
-        <interlocutor-comment comment="[[comment]]" state="[[state]]" user-id="[[userId]]" settings-updated="[[settingsUpdated]]"></interlocutor-comment>
+        <interlocutor-comment
+          comment="[[comment]]"
+          state="[[state]]"
+          user-id="[[userId]]"
+          settings-updated="[[settingsUpdated]]">
+        </interlocutor-comment>
       </template>
     </div>
   </template>

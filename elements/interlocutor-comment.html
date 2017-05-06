@@ -104,7 +104,9 @@
           <paper-menu-button id='userMenuButton'>
               <span class='comment-author-name dropdown-trigger'>[[commentAuthor]]</span>
             <paper-menu id='userMenu' class="dropdown-content">
-              <paper-item on-tap="_closeUserMenu"><a href=[[_contactUserURL(commentAuthor)]] rel="noopener noreferrer" target="_blank"> Contact </a></paper-item>
+              <paper-item on-tap="_closeUserMenu">
+                <a href=[[_contactUserURL(commentAuthor)]] rel="noopener noreferrer" target="_blank"> Contact </a>
+              </paper-item>
               <paper-item on-tap="_ignoreUser">Ignore</paper-item>
             </paper-menu>
           </paper-menu-button>
@@ -180,7 +182,12 @@
       </div>
       <div class='comment-children'>
         <template is="dom-repeat" items="[[children]]" as="comment">
-          <interlocutor-comment comment="[[comment]]" state="[[state]]" user-id="[[userId]]" settings-updated="[[settingsUpdated]]"></interlocutor-comment>
+          <interlocutor-comment
+          comment="[[comment]]"
+          state="[[state]]"
+          user-id="[[userId]]"
+          settings-updated="[[settingsUpdated]]">
+        </interlocutor-comment>
         </template>
       </div>
     </iron-collapse>
@@ -549,13 +556,6 @@
 
       toggleEdit() {
         this.editOpen = !this.editOpen
-      },
-
-      openEditOverlay() {
-        this.$.reply.targetId = this.comment.event_id
-        this.$.reply.action = 'interlocutor.edit'
-        this.$.reply.content = this.body.text
-        this.$.reply.open()
       },
 
       toggleCollapse(_) {
