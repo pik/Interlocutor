@@ -203,6 +203,13 @@
 
       observers: [
         '_onFlagged(flagged.*)',
+        // This is a not very nice way to pass a signal accross non-hierarchially related
+        // elements e.g.
+        // interlocutor-app <-> interlocutor-settings
+        //  \
+        //   interlocutor-comment
+        //    \
+        //    interlocutor-comment
         '_recomputeChildren(settingsUpdated)',
         '_recomputeChildrenCount(children.*)',
         '_recomputeFilteredChildrenCount(children.*)',
