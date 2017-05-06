@@ -4,6 +4,11 @@ Interlocutor is a decentralized comment software built on a Matrix (http://matri
 
 The goal of this project is to provide a censorship-resistant software for discussions, while providing a comfortable modern UI and effective moderation.
 
+
+### Blog
+
+A brief article providing a high-level overview of Interlocutor and a demo application can be found at: https://pik.github.io/Interlocutor/blog/
+
 ### Comment UI
 
 **Flagging Comments**: Comments can be flagged by users by clicking the flag icon. 
