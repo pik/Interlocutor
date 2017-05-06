@@ -321,7 +321,7 @@
         commentAuthor: {
           type: String,
           value: '',
-          computed: '_commentAuthor(comment.author)'
+          computed: '_commentAuthor(comment.user_id)'
         },
 
         // If there is no avatarURL we still want to distinguish
@@ -468,8 +468,7 @@
         return commentBodyOpen && avatarUrl === ''
       },
 
-      _commentAuthor() {
-        console.log('commentAuthor:', this.comment.event_id, this.comment.content.body.text, this.comment.user_id, this.comment.sender)
+      _commentAuthor(_) {
         return this.comment.user_id || this.comment.sender
       },
 
