@@ -1,0 +1,111 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-input/paper-textarea.html">
+<link rel="import" href="../bower_components/iron-collapse/iron-collapse.html">
+<link rel="import" href="../bower_components/iron-overlay-behavior/iron-overlay-behavior.html">
+
+<link rel="import" href="./interlocutor-sdk-behavior.html">
+
+<dom-module id="interlocutor-reply-box">
+  <template>
+    <style>
+      @media only screen and (max-width: 500px) {
+        :host {
+          font-size: 10.5px;
+        }
+        --paper-input-container-input: {
+          font-size: 10.5px;
+        }
+      }
+      :host {
+        background: white;
+        color: black;
+      }
+      paper-input {
+        --paper-input-container-disabled: {
+          opacity: 0.66;
+        };
+      }
+      #reply-body-wrapper {
+        margin-left: 2em;
+        max-width: 19em;
+      }
+      #reply-actions-wrapper {
+        margin-left: 4em;
+      }
+    </style>
+    <div id='reply-body-wrapper'>
+      <paper-textarea id="replyBody" label="" value={{content}}></paper-textarea>
+    </div>
+    <div id='reply-actions-wrapper'>
+      <template is="dom-if" if="[[!posting]]">
+        <paper-button class='reply-cancel' on-tap="close">cancel</paper-button>
+        <paper-button class='reply-post' on-tap="post">[[_postButtonText(action)]]</paper-button>
+      </template>
+      <br/>
+    </div>
+  </template>
+
+<script>
+  Polymer({
+
+    is: 'interlocutor-reply-box',
+    behaviors: [
+      InterlocutorSdkBehavior,
+    ],
+    properties: {
+      content: {
+        type: String,
+        value: '',
+      },
+      targetId: {
+        type: String,
+        value: '',
+        notify: true,
+      },
+      posting: {
+        type: Boolean,
+        value: false
+      },
+      action: {
+        type: String,
+      },
+      open: {
+        type: Boolean,
+        notify: true
+      }
+    },
+    _postButtonText(action) {
+      return action === 'interlocutor.edit' ? 'Edit' : 'Post'
+    },
+
+    close() {
+      this.open = false
+    },
+
+    post() {
+      this.$.replyBody.disabled = true
+      this.posting = true
+      let promise
+      if (this.action === 'interlocutor.edit') {
+        promise = this.sendEditComment(this.targetId, this.content)
+      } else {
+        promise = this.sendCreateComment(this.targetId, this.content)
+      }
+      promise.then((_) => {
+        this.$.replyBody.disabled = false
+        this.posting = false
+        this.content = ''
+        this.close()
+      },
+      (err) => {
+        this.$.replyBody.disabled = false
+        this.posting = false
+        console.log(err)
+      })
+    },
+
+  });
+</script>
+</dom-module>
