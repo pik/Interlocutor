@@ -1,9 +1,8 @@
 # Interlocutor
 
-Interlocutor is a decentralized comment software built on a Matrix (http://matrix.org/) backend as a Polymer Wecomponent, it is under active development and not ready for production use. 
+Interlocutor is a decentralized comment software built on a [Matrix](http://matrix.org/) backend as a [Polymer Webcomponent](https://www.webcomponents.org/), it is under active development and not ready for production use. 
 
-The goal of this project is to provide a censorship-resistant software for discussions, while providing a comfortable modern UI and effective moderation.
-
+The goal of this project is to provide a censorship-resistant software for discussions, while providing a comfortable modern UI and effective moderation features. 
 
 ### Blog
 
