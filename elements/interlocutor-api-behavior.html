@@ -1,0 +1,77 @@
+<script type="text/javascript">
+  const InterlocutorApiBehavior = {
+    _sendMessage(roomId, content, txnId) {
+      return client.sendEvent(roomId, "m.room.comment", content, txnId )
+        .then(null, (err) => {
+          this.fire('notify', e)
+        })
+    },
+
+    /**
+     * Create a comment, it can be a response to an existing comment or top-level
+     * in which case the commentId is set to the roomId.
+     * @param {string} roomId
+     * @param {string} commentId
+     * @return {module:client.Promise} Resolves: TODO
+     * @return {module:http-api.MatrixError} Rejects: with an error response.
+     */
+    sendCreateComment (commentId, text) {
+      const content = {
+        msgtype: 'interlocutor.comment',
+        body: { text: text, target_id: commentId }
+      }
+      return this._sendMessage(roomId, content, (client.txnId+=1))
+    },
+
+    /**
+     * Edit a comment, must have been a comment previously created by the same user.
+     * @param {string} commentId
+     * @param {string} text
+     * @return {module:client.Promise}
+     * @return {module:http-api.MatrixError} Rejects: with an error response.
+     */
+    sendEditComment (commentId, text) {
+      const content = {
+        msgtype: 'interlocutor.edit',
+        body: { target_id: commentId, text: text }
+      }
+      return this._sendMessage(roomId, content, (client.txnId+=1))
+    },
+
+    /**
+     * Upvote or Downvote a comment, can only be done once per user.
+     * @param {string} commentId
+     * @param {number} value
+     * @return {module:client.Promise}
+     * @return {module:http-api.MatrixError} Rejects: with an error response.
+     */
+    sendVoteComment (commentId, value) {
+      if ([-1, 0, 1].indexOf(value) === -1) {
+        throw 'IllegalVote'
+      }
+      console.log('sendVote', commentId, value)
+      const content = {
+        msgtype: 'interlocutor.vote',
+        body: { target_id: commentId, value: value }
+      }
+      return this._sendMessage(roomId, content, client.txnId+=1)
+    },
+
+
+    /**
+     * Flag or Unflag a comment, only once per user.
+     * @param {string} commentId
+     * @param {boolean} value: Add(true) or Remove(false) flag
+     * @return {module:client.Promise}
+     * @return {module:http-api.MatrixError} Rejects: with an error response.
+     */
+    sendFlagComment (commentId, value) {
+      console.log('sendFlag', commentId, value)
+      const content = {
+        msgtype: 'interlocutor.flag',
+        body: { target_id: commentId, value: value}
+      }
+      return this._sendMessage(roomId, content, client.txnId+=1)
+    },
+  }
+</script>

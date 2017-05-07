@@ -1,86 +1,5 @@
 <script type="text/javascript">
   // @polymerBehavior InterlocutorSdkBehavior
-  const deepCopy = function(obj) {
-    return JSON.parse(JSON.stringify(obj))
-  }
-
-  const deepCompare = function(x, y) {
-      // Inspired by
-      // http://stackoverflow.com/questions/1068834/object-comparison-in-javascript#1144249
-
-      // Compare primitives and functions.
-      // Also check if both arguments link to the same object.
-      if (x === y) {
-          return true;
-      }
-
-      if (typeof x !== typeof y) {
-          return false;
-      }
-
-      // special-case NaN (since NaN !== NaN)
-      if (typeof x === 'number' && isNaN(x) && isNaN(y)) {
-           return true;
-      }
-
-      // special-case null (since typeof null == 'object', but null.constructor
-      // throws)
-      if (x === null || y === null) {
-          return x === y;
-      }
-
-      // everything else is either an unequal primitive, or an object
-      if (!(x instanceof Object)) {
-          return false;
-      }
-
-      // check they are the same type of object
-      if (x.constructor !== y.constructor || x.prototype !== y.prototype) {
-          return false;
-      }
-
-      // special-casing for some special types of object
-      if (x instanceof RegExp || x instanceof Date) {
-          return x.toString() === y.toString();
-      }
-
-      // the object algorithm works for Array, but it's sub-optimal.
-      if (x instanceof Array) {
-          if (x.length !== y.length) {
-              return false;
-          }
-
-          for (var i = 0; i < x.length; i++) {
-              if (!deepCompare(x[i], y[i])) {
-                  return false;
-              }
-          }
-      } else {
-          // disable jshint "The body of a for in should be wrapped in an if
-          // statement"
-          /* jshint -W089 */
-
-          // check that all of y's direct keys are in x
-          var p;
-          for (p in y) {
-              if (y.hasOwnProperty(p) !== x.hasOwnProperty(p)) {
-                  return false;
-              }
-          }
-
-          // finally, compare each of x's keys with y
-          for (p in y) {
-              if (y.hasOwnProperty(p) !== x.hasOwnProperty(p)) {
-                  return false;
-              }
-              if (!deepCompare(x[p], y[p])) {
-                  return false;
-              }
-          }
-      }
-      /* jshint +W089 */
-      return true;
-  };
 
   const __defaultSettings = {
           flagKillThreshold: 1,
@@ -98,7 +17,12 @@
     debug: false
   }
 
+  const __commentTree = new CommentTree()
+
   const InterlocutorSdkBehavior = {
+    commentTree() {
+      return __commentTree
+    },
 
     defaultRoomOpts() {
       return {
@@ -176,9 +100,10 @@
       } else {
         window.client = window.guestClient
         return new Promise(function(resolve, reject) {
-          if (client._lastPeeked) {
-            client._peekSync.startPeeking(client._lastPeeked.roomId, client._lastPeeked.token)
-          }
+          // Restart peeking from where we left off
+          // TODO restart peeking from where logged in client left off
+          client._peekSync.startPeeking(client._lastPeeked.roomId, client._lastPeeked.token)
+          this.commentTree().eventProcessingOn(client)
           resolve({acccess_token: client._http.opts.accessToken})
         })
       }
@@ -186,10 +111,9 @@
 
     deactivateGuestClient(client) {
       if (client && client.isGuest()) {
-        if (client._peekSync) {
-          client._lastPeeked = client._peekSync.peekInfo()
-        }
+        client._lastPeeked = client._peekSync.peekInfo()
         client._peekSync.stopPeeking()
+        this.commentTree().eventProcessingOff(client)
       }
     },
 
@@ -208,6 +132,7 @@
         client._http.opts.accessToken  = result.access_token
         return result
       }).then((result)=> {
+        this.commentTree().eventProcessingOn(client)
         client.startClient({ pendingEventOrdering: 'detached' })
         return result
       }, (err) => {
@@ -223,104 +148,6 @@
       }
     },
 
-    addEvent (event) {
-      // the state object contains events key'd by event_id or (room_id) for top-level
-      // to Add an event add the event_id: <event> pair to state
-      // and then push the event into the children array of the event it references.
-      // A top level comment should supply the roomId as it's target_id
-      const targetId = event.content.body.target_id
-      // TODO: Find out why I'm receiving duplicate events so I don't have to guard
-      if (this.state[event.event_id]) {
-        console.log('Received duplicate comment event - returning..', event.user_id || event.sender, event.event_id, event.content.msgtype, event.content.body)
-        return
-      } else if (this.state[targetId] === undefined && targetId !== roomId) {
-        // TODO Matrix-JS-SDK addEventsToTimeline will allow on the "on" event function
-        // to bubble and error out
-        return console.log('Failed to find parent comment with id: ', targetId)
-      } else {
-        this.state[event.event_id] = event
-      }
-      event.flags = new Set()
-      event.votes = new Set()
-      event.score = 1
-      event.flagged = {}
-      event.voted = {}
-      event.children = new NotifyArray()
-      // Need to use Polymer Push for NotifyPath
-      // I hate breaking separation of concerns like this
-      // TODO: switch to using a SET()
-      this.state[targetId].children.push(event)
-    },
-
-    processEvent (event) {
-      console.log('Processing event', event.user_id || event.sender, event.event_id, event.content.msgtype, event.content.body)
-      if (event.type !== 'm.room.comment') return false
-      const content = event.content
-      let target
-      if (content.msgtype === 'interlocutor.comment') {
-        target = event
-        return this.addEvent(event)
-      } else {
-        target = this.state[content.body.target_id]
-        if (!target) {
-          return console.log(`Failed to find target with id: ${content.body.target_id}: for: ${content.msgtype}`)
-        }
-        // switch() isn't closured by default
-        let element
-        switch (content.msgtype) {
-          case 'interlocutor.vote':
-            const sender = event.user_id || event.sender
-            const previousVote = target.voted[sender]
-            const voteValue = content.body.value
-            // Ignore illegal voteValues
-            if ([-1, 0, 1].indexOf(voteValue) === -1) {
-              console.log(`Illegal Vote Value: ${voteValue}, ignoring...`)
-              return false
-            }
-            // Undo the vote modifier from the previousVote if
-            // there was one. Then apply the current vote.
-            // Set the current value of voted[<userId>] to the current vote event.
-            if (previousVote && target.votes.add(event)) {
-              target.score -= previousVote.content.body.value
-              target.score += voteValue
-              target.voted[sender] = event
-            } else if (target.votes.add(event)) {
-              target.score += voteValue
-              target.voted[sender] = event
-            }
-            element = document.getElementById(content.body.target_id)
-            if (element) {
-              element.notifyPath(`voted.${sender}`, voteValue)
-            }
-            break
-          case 'interlocutor.flag':
-            if (target.flags.add(event)) {
-              const sender = event.user_id || event.sender
-              const value = content.body.value
-              target.flagged[sender] = value
-              element = document.getElementById(content.body.target_id)
-              if (element) {
-                // Use the exact key-value pair becaues there is no option to force Notify
-                // on the base value
-                element.notifyPath(`flagged.${sender}`, value)
-              }
-          }
-            break
-          case 'interlocutor.edit':
-            target.content.body.text = content.body.text
-            // Setup editedTimestamp from the edit event
-            target.editedTimestamp = event.origin_server_ts
-            element = document.getElementById(content.body.target_id)
-            if (element) {
-              // Use pathEffector because NotifyPath has no force
-              element._pathEffector('comment.content.body', content.body)
-              element.notifyPath('comment.editedTimestamp', target.editedTimestamp)
-            }
-      }
-      return true
-      }
-    },
-
     onLocalEchoUpdated(matrixEvent, Room, eventId, oldStatus) {
       if (matrixEvent.status === "sent" && eventId && oldStatus === "sending" &&
         matrixEvent.event.onEventIdChanged) {
@@ -333,7 +160,7 @@
       // Setup notification for event_id changes
       client.addListener("Room.localEchoUpdated", this.onLocalEchoUpdated)
       // Setupo the root Node for the CommentTree
-      this.state[roomId] = { children: new NotifyArray() }
+      this.commentTree().state[roomId] = { children: new NotifyArray() }
       console.log('Building initial comment-tree state..')
       const limit = 1000
       if (client.isGuest()) {
@@ -347,83 +174,10 @@
           for (let event of events) {
             // All Interloctur events are of type 'm.room.comment'
             if (event.type !== 'm.room.comment') continue
-            this.processEvent(event)
+            this.commentTree().processEvent(event)
           }
         })
       }
-    },
-
-    sendMessage(roomId, content, txnId) {
-      return client.sendEvent(roomId, "m.room.comment", content, txnId )
-        .then(null, (err) => {
-          this.fire('notify', e)
-        })
-    },
-    /**
-     * Create a comment, it can be a response to an existing comment or top-level
-     * in which case the commentId is set to the roomId.
-     * @param {string} roomId
-     * @param {string} commentId
-     * @return {module:client.Promise} Resolves: TODO
-     * @return {module:http-api.MatrixError} Rejects: with an error response.
-     */
-    sendCreateComment (commentId, text) {
-      const content = {
-        msgtype: 'interlocutor.comment',
-        body: { text: text, target_id: commentId }
-      }
-      return this.sendMessage(roomId, content, (client.txnId+=1))
-    },
-
-    /**
-     * Edit a comment, must have been a comment previously created by the same user.
-     * @param {string} commentId
-     * @param {string} text
-     * @return {module:client.Promise} Resolves: TODO
-     * @return {module:http-api.MatrixError} Rejects: with an error response.
-     */
-    sendEditComment (commentId, text) {
-      const content = {
-        msgtype: 'interlocutor.edit',
-        body: { target_id: commentId, text: text }
-      }
-      return this.sendMessage(roomId, content, (client.txnId+=1))
-    },
-
-    /**
-     * Upvote or Downvote a comment, can only be done once per user.
-     * @param {string} commentId
-     * @param {number} value
-     * @return {module:client.Promise} Resolves: TODO
-     * @return {module:http-api.MatrixError} Rejects: with an error response.
-     */
-    sendVoteComment (commentId, value) {
-      if ([-1, 0, 1].indexOf(value) === -1) {
-        throw 'IllegalVote'
-      }
-      console.log('sendVote', commentId, value)
-      const content = {
-        msgtype: 'interlocutor.vote',
-        body: { target_id: commentId, value: value }
-      }
-      return this.sendMessage(roomId, content, client.txnId+=1)
-    },
-
-
-    /**
-     * Flag or Unflag a comment, only once per user.
-     * @param {string} commentId
-     * @param {boolean} value
-     * @return {module:client.Promise} Resolves: TODO
-     * @return {module:http-api.MatrixError} Rejects: with an error response.
-     */
-    sendFlagComment (commentId, value) {
-      console.log('sendFlag', commentId, value)
-      const content = {
-        msgtype: 'interlocutor.flag',
-        body: { target_id: commentId, value: value}
-      }
-      return this.sendMessage(roomId, content, client.txnId+=1)
     },
 
     saveUserSettings(settings) {

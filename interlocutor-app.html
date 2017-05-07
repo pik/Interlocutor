@@ -136,7 +136,7 @@
 
       state: {
         type: Object,
-        value: function() { return {} },
+        value: function() { this.commentTree().state },
         notify: true,
       },
 
@@ -237,10 +237,11 @@
     },
 
     _recomputeFilteredChildrenCount() {
+      const state = this.commentTree().state
       const computeDataChildrenCount = (targetId) => {
-        if (this.state[targetId] === undefined) return 0
-        let count = this.state[targetId].children.length
-        for (let childComment of this.state[targetId].children) {
+        if (state[targetId] === undefined) return 0
+        let count = state[targetId].children.length
+        for (let childComment of state[targetId].children) {
           count += computeDataChildrenCount(childComment.event_id)
         }
         return count
@@ -288,25 +289,17 @@
       this.loggedIn = true
       if (this.roomId && !client.isGuest()) {
         client.joinRoom(this.roomId)
-        client.on("Room.timeline", (matrixEvent, room, toStartOfTimeline) => {
-          const event = matrixEvent.event
-          console.log('received Room.timeline event', event.event_id, event.type, room.room_id)
-          this.processEvent(event)
-        })
       }
     },
 
     initializeComments() {
+      const state = this.commentTree().state
       try {
-        client.on("Room.timeline", (matrixEvent, room, toStartOfTimeline) => {
-          const event = matrixEvent.event
-          console.log('received Room.timeline event', event.event_id, event.type, room.room_id)
-          this.processEvent(event)
-        })
+        this.commentTree().eventProcessingOn(client)
         this.buildInitialRoomState(this.roomId).then((_) => {
           this.clientReady = true
           // FIX THIS ALSO
-          this.dataTopLevelComments = this.state[this.roomId].children
+          this.dataTopLevelComments = state[this.roomId].children
           this.dataTopLevelComments.addListener(this, 'dataTopLevelComments')
         }, (err) => {
           console.log(err)

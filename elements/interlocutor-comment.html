@@ -8,6 +8,7 @@
 <link rel="import" href="./interlocutor-reply-box.html">
 <link rel="import" href="./interlocutor-helper-behavior.html">
 <link rel="import" href="./interlocutor-sdk-behavior.html">
+<link rel="import" href="./interlocutor-api-behavior.html">
 
 <dom-module id="interlocutor-comment">
   <template>
@@ -179,7 +180,6 @@
         <template is="dom-repeat" items="[[children]]" as="comment">
           <interlocutor-comment
           comment="[[comment]]"
-          state="[[state]]"
           user-id="[[userId]]"
           settings-updated="[[settingsUpdated]]">
         </interlocutor-comment>
@@ -194,7 +194,8 @@
 
       behaviors: [
         InterlocutorHelperBehavior,
-        InterlocutorSdkBehavior
+        InterlocutorSdkBehavior,
+        InterlocutorApiBehavior
       ],
 
       listeners: {
@@ -222,10 +223,6 @@
         backgroundColor: {
           type: String,
           value: '#80cef4'
-        },
-        state: {
-          type: Object,
-          value: function() { return {} },
         },
         comment: {
           type: Object,

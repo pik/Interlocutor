@@ -6,6 +6,7 @@
 <link rel="import" href="../bower_components/iron-overlay-behavior/iron-overlay-behavior.html">
 
 <link rel="import" href="./interlocutor-sdk-behavior.html">
+<link rel="import" href="./interlocutor-api-behavior.html">
 
 <dom-module id="interlocutor-reply-box">
   <template>
@@ -53,6 +54,7 @@
     is: 'interlocutor-reply-box',
     behaviors: [
       InterlocutorSdkBehavior,
+      InterlocutorApiBehavior
     ],
     properties: {
       content: {
