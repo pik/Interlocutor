@@ -514,9 +514,9 @@
 
       _children(_) {
         console.log('filtering _children')
-        return this.dataChildren.filter((comment) => {
+        return this.sortComments(this.dataChildren.filter((comment) => {
           return comment.content.msgtype === 'interlocutor.comment' && this.permitted(comment)
-        })
+        }))
       },
 
       _canEdit(userId, comment) {

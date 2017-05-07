@@ -14,12 +14,43 @@
     flagsEnabled: true,
     upvotesEnabled: true,
     editsEnabled: true,
+    sortStrategy: 'newest',
     debug: false
   }
 
+  let __appConfig = null
+
   const __commentTree = new CommentTree()
 
+  const __sortStrategies = {
+    newest(comments) {
+      return comments.sort((c1, c2) => {
+        // If compareFunction(a, b) is less than 0, sort a to a lower index than b, i.e. a comes first
+        return c1.event_id > c2.event_id ? -1 : 1
+      })
+    },
+
+    top(comments) {
+      return comments,sort((c1, c2) => {
+        return c2.score - c1.score
+      })
+    },
+
+  }
+
   const InterlocutorSdkBehavior = {
+
+    appConfig() {
+      return __appConfig || __defaultConfig
+    },
+
+    setupConfig(config) {
+      __appConfig = config
+      for (let key in __defaultConfig) {
+        if (config[key] === undefined) config[key] = __defaultConfig[key]
+      }
+    },
+
     commentTree() {
       return __commentTree
     },
@@ -64,7 +95,7 @@
 
     permitted (comment) {
       const settings = document.getElementById('settings').settings
-      const config = document.getElementById('settings').config
+      const config = this.appConfig()
       if (!settings.filterOn) return true
       const sender = comment.user_id || comment.sender
       // If the user is in the ignore list gib it right away
@@ -198,6 +229,10 @@
           total += s.charCodeAt(i);
       }
       return colors[total % colors.length]
+    },
+
+    sortComments(comments) {
+      return __sortStrategies[this.appConfig().sortStrategy](comments)
     }
   }
 </script>

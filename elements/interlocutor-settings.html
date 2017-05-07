@@ -202,6 +202,10 @@
       }
     },
 
+    attached() {
+      this.setupConfig(this.config)
+    },
+
     _settingsProfileChanged(event) {
       if (event && event.detail.item) {
         const newProfileName = event.detail.item.attributes.name.value

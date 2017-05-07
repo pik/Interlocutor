@@ -323,9 +323,9 @@
     _topLevelComments() {
       console.log('_topLevelComments')
       this._recomputeFilteredChildrenCount()
-      return this.dataTopLevelComments.filter((comment) => {
+      return this.sortComments(this.dataTopLevelComments.filter((comment) => {
         return comment.content.msgtype === 'interlocutor.comment' && this.permitted(comment)
-      })
+      }))
     },
 
     logout() {
