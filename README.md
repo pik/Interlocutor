@@ -79,14 +79,15 @@ Static configuration for Interlocutor App.
 
 ```js
 {
-    flagsEnabled:true, // Flags are enabled for comments.
-    upvotesEnabled:true, // Stars are enabled for comments.
-    editsEnabled:true // Edits are enabled for comments. 
+    flagsEnabled: true, // Flags are enabled for comments.
+    upvotesEnabled: true, // Stars are enabled for comments.
+    editsEnabled: true, // Edits are enabled for comments. 
+    sortStrategy: 'newest' // Default comment sort order, accepts 'newest' or 'top'.
 }
 ```
 
 #### roomId
-Each comment thread corresponds to a unique Matrix RoomId, currently the relevant room should be created on a per discussion basis, this will be improved in the future.
+Each comment thread corresponds to a unique Matrix RoomId, currently the relevant room should be created on a per discussion basis. This can be done via. one of the existing Matrix clients or via. the create_room script provided in this repo. Note that creating a room requires the user to be registered on the Homeserver.
 
 #### home-server-address
 Pass a Matrix `home-server-address` to interlocutor. 
