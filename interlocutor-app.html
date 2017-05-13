@@ -5,7 +5,6 @@
 <link rel="import" href="./bower_components/polymer/polymer.html">
 <link rel="import" href="./bower_components/paper-button/paper-button.html">
 <link rel="import" href="./bower_components/paper-icon-button/paper-icon-button.html">
-<!-- <link rel="import" href="./bower_components/paper-toast/paper-toast.html"> -->
 <link rel="import" href="./bower_components/paper-spinner/paper-spinner-lite.html">
 <link rel="import" href="./bower_components/paper-button/paper-button.html">
 
@@ -14,7 +13,6 @@
 <link rel="import" href="./elements/interlocutor-login.html">
 <link rel="import" href="./elements/interlocutor-settings.html">
 <link rel="import" href="./elements/interlocutor-reply-box.html">
-<!-- <link rel="import" href="./elements/interlocutor-author-profile.html"> -->
 <link rel="import" href="./elements/interlocutor-helper-behavior.html">
 <link rel="import" href="./elements/interlocutor-sdk-behavior.html">
 
@@ -58,9 +56,7 @@
         </interlocutor-settings>
         [[_filteredChildrenCountStatement(filteredChildrenCount)]]
       </span>
-      <!-- <interlocutor-author-profile id="authorProfile"></interlocutor-author-profile> -->
     </div>
-    <!-- <paper-toast id="toast" text="" vertical-align="top"></paper-toast> -->
     <div class='comment-section' hidden="[[!clientReady]]">
         <template is="dom-if" if=[[replyOpen]]>
           <interlocutor-reply-box
@@ -129,11 +125,6 @@
         value: null,
       },
 
-      // room: {
-      //   type: Object,
-      //   value: null
-      // },
-
       state: {
         type: Object,
         value: function() { this.commentTree().state },
@@ -167,11 +158,6 @@
         value: 0,
       },
 
-      user: {
-        type: Object,
-        value: function() { return {} }
-      },
-
       userId: {
         type: String,
         value: null,
@@ -202,6 +188,8 @@
 
     attached() {
       this.initializeClient()
+      // We do this to allow the back-button on mobile to close
+      // the settings and login overlays.
       this._hashChangeListener = (hashChangeEvent) => {
         if (hashChangeEvent.oldURL.includes('#interlocutor-settings') && !window.location.hash.includes('#interlocutor-settings')) {
           this.$.settings.close()
@@ -223,10 +211,6 @@
       })
     },
 
-    openAuthorProfile() {
-      this.$.authorProfile.open()
-    },
-
     _ignoreUser(event, target) {
       this.$.settings.addIgnoredIdentity(target)
     },
@@ -236,6 +220,7 @@
       this._recomputeFilteredChildrenCount()
     },
 
+    // This needs to go to CommentTree
     _recomputeFilteredChildrenCount() {
       const state = this.commentTree().state
       const computeDataChildrenCount = (targetId) => {
@@ -251,9 +236,6 @@
       }, 0)
       const dataChildrenCount = computeDataChildrenCount(this.roomId)
       this.filteredChildrenCount = dataChildrenCount - childrenCount
-      // this.filteredChildrenCount = this.dataTopLevelComments.reduce((prev, cur) => {
-      //     return prev + (this.permitted(cur) ? (cur.filteredChildrenCount || 0) : (cur.filteredChildrenCount) + 1)
-      //   }, 0)
     },
 
     _recomputeTopLevelComments(event, source) {
@@ -336,14 +318,6 @@
       })
     },
 
-    _credentials() {
-      return client.credentials
-    },
-
-    toggle(selector) {
-      this.commentBodyOpen = !this.commentBodyOpen
-    },
-
     openLogin() {
       window.location.hash = '#interlocutor-login'
       this.$.login.open()
@@ -352,11 +326,6 @@
     openSettings() {
       window.location.hash = '#interlocutor-settings'
       this.$.settings.open()
-    },
-
-    notify(event) {
-      // this.$.toast.text = event.detail
-      // this.$.toast.open()
     },
 
     toggleReply() {

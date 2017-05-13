@@ -520,27 +520,24 @@
       },
 
       _canEdit(userId, comment) {
-        const settings = document.getElementById('settings').settings
-        const config = document.getElementById('settings').config
-        return userId && comment && settings && settings.editWindow !== -1 &&
+        const config = this.appConfig()
+        return userId && comment && config.editWindow !== -1 &&
           ((comment.user_id || comment.sender) === userId) &&
-          (settings.editWindow + comment.origin_server_ts > new Date().getTime()) &&
-          config.editsEnabled
-
+          (config.editWindow + comment.origin_server_ts > new Date().getTime())
       },
 
       _canUpVote(userId, comment) {
-        const config = document.getElementById('settings').config
-        return userId && comment  && (comment.user_id !== userId || config.debug) && config.upvotesEnabled
+        const config = this.appConfig()
+        return config.upvotesEnabled && userId && comment  && (comment.user_id !== userId || config.debug)
       },
 
       _canFlag(userId, comment) {
-        const config = document.getElementById('settings').config
-        return userId && comment && (comment.user_id !== userId || config.debug) && config.flagsEnabled
+        const config = this.appConfig()
+        return config.flagsEnabled && userId && comment && (comment.user_id !== userId || config.debug)
       },
 
       _canReply(userId, comment) {
-        const config = document.getElementById('settings').config
+        const config = this.appConfig()
         return userId && comment && (comment.user_id !== userId || config.debug)
       },
 

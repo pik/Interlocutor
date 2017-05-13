@@ -70,41 +70,84 @@
       </div>
       <div class='settings-body'>
         <div class='on-wrapper'>
-          <paper-icon-button icon="settings-power" class$="[[_classBinding(filterOn, 'on')]]" on-tap="toggle"></paper-icon-button>
+          <paper-icon-button
+            icon="settings-power"
+            class$="[[_classBinding(filterOn, 'on')]]"
+            on-tap="toggleFilter">
+          </paper-icon-button>
         </div>
         <paper-dropdown-menu label="profile">
-          <paper-listbox class="dropdown-content" attr-for-selected="name" selected="[[activeSettingsProfile]]">
+          <paper-listbox
+            class="dropdown-content"
+            attr-for-selected="name"
+            selected="[[activeSettingsProfile]]">
             <paper-item name="defaultSettings">Default Settings</paper-item>
             <paper-item name="customSettings">Custom Settings </paper-item>
           </paper-listbox>
         </paper-dropdown-menu>
         <template is="dom-if" if=[[config.flagsEnabled]]>
           <div>Flag Kill threshold: </div>
-          <paper-slider id="flagKillThreshold" min="0" max="100" value={{settings.flagKillThreshold}} disabled$="[[!filterOn]]" editable></paper-slider>
+          <paper-slider
+            id="flagKillThreshold"
+            min="0"
+            max="100"
+            value={{settings.flagKillThreshold}}
+            disabled$="[[!filterOn]]"
+            editable>
+          </paper-slider>
         </template>
         <template is="dom-if" if=[[config.upvotesEnabled]]>
           <div>Auto-collapse below vote threshold: </div>
-          <paper-slider id="voteCollapseThreshold" min="-1" max="200" value={{settings.voteCollapseThreshold}} disabled$="[[!filterOn]]" editable></paper-slider>
+          <paper-slider
+            id="voteCollapseThreshold"
+            min="-1"
+            max="200"
+            value={{settings.voteCollapseThreshold}}
+            disabled$="[[!filterOn]]"
+            editable>
+          </paper-slider>
         </template>
         <template is="dom-if" if=[[config.flagsEnabled]]>
           <div class='moderator-settings'>
             <span> Moderator Identities: </span>
             <div class$="moderator-list [[_classBinding(filterOn, 'on')]]">
               <template is="dom-repeat" items="[[trustedIdentities]]" as="identity">
-                <span> [[identity]]<paper-icon-button icon="remove-circle" on-tap='removeTrustedIdentity' value="[[identity]]"></paper-icon-button> </span>
+                <span>
+                  [[identity]]
+                  <paper-icon-button
+                    icon="remove-circle"
+                    on-tap='removeTrustedIdentity'
+                    value="[[identity]]">
+                  </paper-icon-button>
+                </span>
               </template>
             </div>
-            <paper-input value='{{newTrustedIdentity}}' label="Add a User as Moderator." on-keydown="addTrustedIdentityFromInput"></paper-input>
+            <paper-input
+              value='{{newTrustedIdentity}}'
+              label="Add a User as Moderator."
+              on-keydown="addTrustedIdentityFromInput">
+            </paper-input>
           </div>
         </template>
         <div class='ignore-settings'>
           <span> Ignored Users: </span>
           <div class$="ignored-list [[_classBinding(filterOn, 'on')]]">
             <template is="dom-repeat" items="[[ignoredIdentities]]" as="identity">
-              <p> [[identity]]<paper-icon-button icon="remove-circle" on-tap='removeIgnoredIdentity' value="[[identity]]"></paper-icon-button>
+              <span>
+                [[identity]]
+                <paper-icon-button
+                  icon="remove-circle"
+                  on-tap='removeIgnoredIdentity'
+                  value="[[identity]]">
+                </paper-icon-button>
+              </span>
             </template>
           </div>
-          <paper-input value='{{newIgnoredIdentity}}' label="Add a User to the Ignore List." on-keydown="addIgnoredIdentityFromInput"></paper-input>
+          <paper-input
+            value='{{newIgnoredIdentity}}'
+            label="Add a User to the Ignore List."
+            on-keydown="addIgnoredIdentityFromInput">
+          </paper-input>
         </div>
       </div>
     </div>
@@ -156,7 +199,6 @@
 
       config: {
         type: Object,
-        notify: true
       },
 
       activeSettingsProfile: {
@@ -204,6 +246,12 @@
 
     attached() {
       this.setupConfig(this.config)
+      this.setAppSettings(this.settings)
+    },
+
+    setSettings(settings) {
+      this.set('settings', settings)
+      this._setAppSettings(settings)
     },
 
     _settingsProfileChanged(event) {
@@ -214,7 +262,7 @@
           if (!this[newProfileName]) {
             this[newProfileName] = deepCopy(this.settings)
           }
-          this.set('settings', this[newProfileName])
+          this.setSettings('settings', this[newProfileName])
         }
       }
     },
@@ -222,7 +270,7 @@
     _settingsFromDefaults(defaultSettings) {
       if (defaultSettings && this.activeSettingsProfile === null) {
         this.activeSettingsProfile = 'defaultSettings'
-        this.set('settings', deepCopy(defaultSettings))
+        this.setSettings('settings', deepCopy(defaultSettings))
       }
     },
 
@@ -290,7 +338,7 @@
           this._ensureAllSettingsKeysPresent(settings)
           this.set('customSettings', settings)
           this.set('activeSettingsProfile', 'customSettings')
-          this.set('settings', settings)
+          this.setSettings('settings', settings)
         }
       })
     },
@@ -304,7 +352,7 @@
       }
     },
 
-    toggle(_) {
+    toggleFilter(_) {
       this.set('settings.filterOn', !this.settings.filterOn)
     },
 
