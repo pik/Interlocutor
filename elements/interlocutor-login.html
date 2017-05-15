@@ -60,8 +60,8 @@
 
     behaviors: [
       Polymer.IronOverlayBehavior,
-      InterlocutorSdkBehavior,
-      InterlocutorHelperBehavior
+      Interlocutor.SdkBehavior,
+      Interlocutor.HelperBehavior
     ],
 
     observers: [
@@ -96,7 +96,7 @@
     },
 
     attached() {
-      InterlocutorSdkBehavior.foo = 5
+      Interlocutor.SdkBehavior.foo = 5
     },
 
     _registrationURL(homeServerAddress) {
@@ -104,7 +104,7 @@
     },
 
     login() {
-      InterlocutorSdkBehavior.loginClient(this.$.username.value, this.$.password.value, this.homeServerAddress)
+      Interlocutor.SdkBehavior.loginClient(this.$.username.value, this.$.password.value, this.homeServerAddress)
         .then((result) => {
           this.$.username.value = this.$.password.value = this.loginError = ''
           this.userId = result.user_id

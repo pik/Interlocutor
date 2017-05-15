@@ -158,9 +158,9 @@
     is: 'interlocutor-settings',
 
     behaviors: [
-      InterlocutorSdkBehavior,
+      Interlocutor.SdkBehavior,
       Polymer.IronOverlayBehavior,
-      InterlocutorHelperBehavior,
+      Interlocutor.HelperBehavior,
     ],
 
     observers: [
@@ -246,7 +246,7 @@
 
     attached() {
       this.setupConfig(this.config)
-      this.setAppSettings(this.settings)
+      this._setAppSettings(this.settings)
     },
 
     setSettings(settings) {

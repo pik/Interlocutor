@@ -1,7 +1,7 @@
 <script>
-    // @polymerBehavior InterlocutorHelperBehavior
-
-  const InterlocutorHelperBehavior = {
+    // @polymerBehavior Interlocutor.HelperBehavior
+(function() {
+  const HelperBehavior = {
     _eql(prop1, prop2) {
       return prop1 === prop2
     },
@@ -37,4 +37,7 @@
     }
 
   }
+  if (!window.Interlocutor) window.Interlocutor = {}
+  window.Interlocutor.HelperBehavior = HelperBehavior
+})()
 </script>

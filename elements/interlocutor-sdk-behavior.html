@@ -1,6 +1,6 @@
 <script type="text/javascript">
-  // @polymerBehavior InterlocutorSdkBehavior
-
+  // @polymerBehavior Interlocutor.SdkBehavior
+(function () {
   const __defaultSettings = {
           flagKillThreshold: 1,
           voteCollapseThreshold: -1,
@@ -20,7 +20,7 @@
   const __defaultRoomOpts = {
     // A public visibility indicates that the room will be shown in the published room list.
     // A private visibility will hide the room from the published room list.
-    // Rooms default to private visibility if this key is not included.
+    // Rooms default to private visibiity if this key is not included.
     // NB: This should not be confused with join_rules which also uses the word public. One of: ["public", "private"]
     visibility: 'public',
     initial_state: [
@@ -61,7 +61,7 @@
 
   }
 
-  const InterlocutorSdkBehavior = {
+  const SdkBehavior = {
 
     appConfig() {
       return __appConfig || __defaultConfig
@@ -250,6 +250,8 @@
           this.permitted(comment, settings)
       }))
     },
-
   }
+  if (!window.Interlocutor) window.Interlocutor = {}
+  window.Interlocutor.SdkBehavior = SdkBehavior
+})()
 </script>

@@ -55,7 +55,7 @@
       is: 'interlocutor-demo-room-select',
 
       behaviors: [
-        InterlocutorSdkBehavior
+        Interlocutor.SdkBehavior
       ],
       observers: [
         '_currentRoomAlias(currentRoomId)',
@@ -132,11 +132,11 @@
 
       createRoom() {
         if (this.roomName === '') return
-        const roomOpts = InterlocutorSdkBehavior.defaultRoomOpts()
+        const roomOpts = Interlocutor.SdkBehavior.defaultRoomOpts()
         roomOpts.name = this.roomName
         roomOpts.room_alias_name = this.roomName
         this.notify('Starting new discussion..')
-        InterlocutorSdkBehavior.createRoom(roomOpts).then((result) => {
+        Interlocutor.SdkBehavior.createRoom(roomOpts).then((result) => {
           document.getElementById(this.appId).roomId =  this.currentRoomId = result.room_id
         })
       },

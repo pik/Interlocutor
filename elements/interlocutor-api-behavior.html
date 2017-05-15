@@ -1,5 +1,6 @@
 <script type="text/javascript">
-  const InterlocutorApiBehavior = {
+(function() {
+  const ApiBehavior = {
     _sendMessage(roomId, content, txnId) {
       return client.sendEvent(roomId, "m.room.comment", content, txnId )
         .then(null, (err) => {
@@ -74,4 +75,7 @@
       return this._sendMessage(roomId, content, client.txnId+=1)
     },
   }
+  if (!window.Interlocutor) window.Interlocutor = {}
+  window.Interlocutor.ApiBehavior = ApiBehavior
+})()
 </script>
